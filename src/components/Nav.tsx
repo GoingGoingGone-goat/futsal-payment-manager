@@ -30,13 +30,13 @@ export function Nav() {
                             <Link
                                 key={href}
                                 href={href}
-                                className={`flex flex-col md:flex-row items-center md:gap-3 p-3 md:px-4 md:py-3 rounded-xl transition-all ${isActive
-                                        ? 'bg-[hsl(var(--primary)/0.15)] text-[hsl(var(--primary))]'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--accent))]'
+                                className={`flex flex-col md:flex-row items-center md:gap-4 p-4 md:px-6 md:py-4 rounded-xl transition-all ${isActive
+                                    ? 'bg-[hsl(var(--primary)/0.15)] text-[hsl(var(--primary))] opacity-100'
+                                    : 'text-[hsl(var(--primary))] opacity-70 hover:opacity-100 hover:bg-[hsl(var(--accent))]'
                                     }`}
                             >
-                                <Icon size={24} className={isActive ? "stroke-[2.5px]" : "stroke-2"} />
-                                <span className={`text-xs md:text-sm font-medium ${isActive ? 'font-bold' : ''}`}>{label}</span>
+                                <Icon size={32} className={isActive ? "stroke-[3px]" : "stroke-2"} />
+                                <span className={`text-lg md:text-2xl font-medium ${isActive ? 'font-bold' : ''}`}>{label}</span>
                             </Link>
                         );
                     })}
