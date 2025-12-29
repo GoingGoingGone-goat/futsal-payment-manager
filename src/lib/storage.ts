@@ -11,12 +11,17 @@ export interface Player {
     name: string;
 }
 
+export interface PlayerPerformance {
+    playerId: string;
+    goals: number;
+}
+
 export interface Game {
     id: string;
     date: string;
     opponent: string;
     score: string;
-    playerIds: string[];
+    players: PlayerPerformance[];
     costPerPlayer: number;
 }
 
@@ -51,8 +56,23 @@ async function ensureFile() {
 
 async function getLocalData(): Promise<Schema> {
     await ensureFile();
-    const data = await fs.readFile(DATA_FILE, 'utf-8');
-    return JSON.parse(data);
+    const rawData = await fs.readFile(DATA_FILE, 'utf-8');
+    const data = JSON.parse(rawData);
+
+    // Migration for legacy data (playerIds -> players)
+    if (data.games) {
+        data.games = data.games.map((g: any) => {
+            if (g.playerIds && !g.players) {
+                return {
+                    ...g,
+                    players: g.playerIds.map((pid: string) => ({ playerId: pid, goals: 0 }))
+                };
+            }
+            return g;
+        });
+    }
+
+    return data;
 }
 
 async function saveLocalData(data: Schema) {
@@ -63,7 +83,6 @@ async function saveLocalData(data: Schema) {
 
 async function getDbData(): Promise<Schema> {
     try {
-        // Parallelize queries for performance
         const [playersRes, gamesRes, paymentsRes, gamePlayersRes] = await Promise.all([
             sql`SELECT * FROM players`,
             sql`SELECT * FROM games`,
@@ -77,9 +96,12 @@ async function getDbData(): Promise<Schema> {
             opponent: row.opponent,
             score: row.score,
             costPerPlayer: Number(row.cost_per_player),
-            playerIds: gamePlayersRes.rows
+            players: gamePlayersRes.rows
                 .filter(gp => gp.game_id === row.id)
-                .map(gp => gp.player_id)
+                .map(gp => ({
+                    playerId: gp.player_id,
+                    goals: Number(gp.goals || 0)
+                }))
         }));
 
         const payments: Payment[] = paymentsRes.rows.map(row => ({
@@ -96,7 +118,6 @@ async function getDbData(): Promise<Schema> {
         };
     } catch (e) {
         console.error("DB Error:", e);
-        // Fallback to empty if DB fails or tables don't exist yet
         return defaultData;
     }
 }
@@ -126,9 +147,8 @@ export async function addGame(game: Omit<Game, 'id'>) {
     if (USE_DB) {
         await sql`INSERT INTO games (id, date, opponent, score, cost_per_player) VALUES (${id}, ${game.date}, ${game.opponent}, ${game.score}, ${game.costPerPlayer})`;
 
-        // Insert relations
-        for (const pid of game.playerIds) {
-            await sql`INSERT INTO game_players (game_id, player_id) VALUES (${id}, ${pid})`;
+        for (const p of game.players) {
+            await sql`INSERT INTO game_players (game_id, player_id, goals) VALUES (${id}, ${p.playerId}, ${p.goals})`;
         }
 
         return { ...game, id };
@@ -156,18 +176,22 @@ export async function addPayment(payment: Omit<Payment, 'id'>) {
 }
 
 export async function getPlayerStats(playerId: string) {
-    // Re-use logic from getData because it aggregates efficiently in memory for MVP.
-    // In a large scale app, we would write specific SQL queries here (e.g. SUM(amount)).
     const data = await getData();
 
-    const playedGames = data.games.filter(g => g.playerIds.includes(playerId));
+    const playedGames = data.games.filter(g => g.players.some(p => p.playerId === playerId));
     const payments = data.payments.filter(p => p.playerId === playerId);
 
     const totalCost = playedGames.reduce((sum, g) => sum + g.costPerPlayer, 0);
     const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
 
+    const goalsScored = playedGames.reduce((sum, g) => {
+        const playerPerf = g.players.find(p => p.playerId === playerId);
+        return sum + (playerPerf?.goals || 0);
+    }, 0);
+
     return {
         gamesPlayed: playedGames.length,
+        goalsScored,
         totalCost,
         totalPaid,
         owed: totalCost - totalPaid,

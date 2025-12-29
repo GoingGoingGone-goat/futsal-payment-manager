@@ -1,6 +1,7 @@
 import { getData } from '@/lib/storage';
 import { createGame } from '@/app/actions';
-import { Calendar, PlusCircle } from 'lucide-react';
+import { Calendar, PlusCircle, User } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function GamesPage() {
     const data = await getData();
@@ -38,21 +39,34 @@ export default async function GamesPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-1 text-muted">Cost Per Player ($)</label>
-                                <input required name="cost" type="number" step="0.01" placeholder="0.00" className="input" />
+                                <label className="block text-sm font-medium mb-1 text-muted">Total Cost ($)</label>
+                                <input required name="totalCost" type="number" step="0.01" defaultValue="99.00" className="input" />
+                                <p className="text-xs text-muted mt-1">Split evenly amongst players.</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-2 text-muted">Who Played?</label>
-                                <div className="space-y-2 max-h-60 overflow-y-auto p-2 border border-[hsl(var(--border))] rounded-xl bg-[hsl(var(--background)/0.5)]">
+                                <label className="block text-sm font-medium mb-2 text-muted">Squad & Goals</label>
+                                <div className="space-y-2 max-h-80 overflow-y-auto p-2 border border-[hsl(var(--border))] rounded-xl bg-[hsl(var(--background)/0.5)]">
                                     {data.players.length === 0 ? (
                                         <p className="text-xs text-muted text-center py-2">No players found. Add players first.</p>
                                     ) : (
                                         data.players.map(player => (
-                                            <label key={player.id} className="flex items-center gap-3 p-2 hover:bg-[hsl(var(--accent))] rounded-lg cursor-pointer transition-colors">
-                                                <input type="checkbox" name="players" value={player.id} className="w-4 h-4 rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]" />
-                                                <span className="text-sm">{player.name}</span>
-                                            </label>
+                                            <div key={player.id} className="flex items-center justify-between gap-2 p-2 hover:bg-[hsl(var(--accent))] rounded-lg transition-colors group">
+                                                <label className="flex items-center gap-3 cursor-pointer flex-1">
+                                                    <input type="checkbox" name="players" value={player.id} className="w-4 h-4 rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]" />
+                                                    <span className="text-sm font-medium">{player.name}</span>
+                                                </label>
+                                                <div className="flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                    <span className="text-[10px] uppercase text-muted">Goals:</span>
+                                                    <input
+                                                        type="number"
+                                                        name={`goals-${player.id}`}
+                                                        min="0"
+                                                        placeholder="0"
+                                                        className="w-12 p-1 text-xs rounded bg-[hsl(var(--background))] border border-[hsl(var(--border))] text-center focus:border-[hsl(var(--primary))] outline-none"
+                                                    />
+                                                </div>
+                                            </div>
                                         ))
                                     )}
                                 </div>
@@ -82,11 +96,17 @@ export default async function GamesPage() {
                                             {new Date(game.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                                         </span>
                                         <span className="bg-[hsl(var(--accent))] text-xs px-2 py-0.5 rounded text-muted-foreground">
-                                            ${game.costPerPlayer}/player
+                                            ${game.costPerPlayer.toFixed(2)}/player
                                         </span>
                                     </div>
                                     <h3 className="text-xl font-bold flex items-center gap-3">
-                                        <span className="text-muted-foreground">vs</span> {game.opponent}
+                                        <span className="text-muted-foreground">vs</span>
+                                        <Link
+                                            href={`/teams/${encodeURIComponent(game.opponent)}`}
+                                            className="hover:text-[hsl(var(--primary))] hover:underline underline-offset-4 decoration-2 transition-all"
+                                        >
+                                            {game.opponent}
+                                        </Link>
                                         <span className="bg-[hsl(var(--primary)/0.2)] text-[hsl(var(--primary))] px-3 py-1 rounded-lg text-lg">
                                             {game.score}
                                         </span>
@@ -94,17 +114,20 @@ export default async function GamesPage() {
                                 </div>
 
                                 <div className="flex -space-x-2 overflow-hidden">
-                                    {game.playerIds.slice(0, 5).map(pid => {
-                                        const p = data.players.find(pl => pl.id === pid);
+                                    {game.players.slice(0, 5).map(perf => {
+                                        const p = data.players.find(pl => pl.id === perf.playerId);
                                         return p ? (
-                                            <div key={pid} title={p.name} className="h-8 w-8 rounded-full ring-2 ring-[hsl(var(--card))] bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white">
+                                            <div key={perf.playerId} title={`${p.name} (${perf.goals} goals)`} className="relative h-8 w-8 rounded-full ring-2 ring-[hsl(var(--card))] bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white group cursor-default">
                                                 {p.name.charAt(0)}
+                                                {perf.goals > 0 && (
+                                                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-[hsl(var(--primary))] rounded-full border border-[hsl(var(--card))]"></span>
+                                                )}
                                             </div>
                                         ) : null;
                                     })}
-                                    {game.playerIds.length > 5 && (
+                                    {game.players.length > 5 && (
                                         <div className="h-8 w-8 rounded-full ring-2 ring-[hsl(var(--card))] bg-[hsl(var(--accent))] flex items-center justify-center text-xs font-medium">
-                                            +{game.playerIds.length - 5}
+                                            +{game.players.length - 5}
                                         </div>
                                     )}
                                 </div>

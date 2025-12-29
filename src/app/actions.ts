@@ -24,22 +24,38 @@ export async function createGame(formData: FormData) {
     const opponent = formData.get('opponent') as string;
     const date = formData.get('date') as string;
     const score = formData.get('score') as string;
-    const cost = parseFloat(formData.get('cost') as string); // Total cost of game? Or per player? 
-    // Requirement: "Add in a game... cost per player" usually calculated?
-    // User prompt said "Print out how much everyone owes". Usually a game costs $X and is split by N players.
-    // Or "Cost per player" is fixed.
-    // Let's assume input is "Cost Per Player" for simplicity as per my plan.
 
+    // Cost logic: Defaults to 99, can be overridden if input exists and is valid
+    // If user provides "totalCost", we divide by player count.
+    const totalCostInput = formData.get('totalCost');
+    const totalCost = totalCostInput ? parseFloat(totalCostInput as string) : 99.00;
+
+    // Get all players that were checked
     const playerIds = formData.getAll('players') as string[];
+
+    if (playerIds.length === 0) {
+        return; // Validation should happen closely to UI, but good safety
+    }
+
+    const costPerPlayer = totalCost / playerIds.length;
+
+    const players = playerIds.map(pid => {
+        const goalsInput = formData.get(`goals-${pid}`);
+        return {
+            playerId: pid,
+            goals: goalsInput ? parseInt(goalsInput as string) : 0
+        };
+    });
 
     await addGame({
         opponent,
         date,
         score,
-        costPerPlayer: cost,
-        playerIds
+        costPerPlayer,
+        players
     });
 
     revalidatePath('/');
     revalidatePath('/games');
+    revalidatePath(`/teams/${opponent}`); // Revalidate the opponent history page if it exists
 }
