@@ -11,8 +11,8 @@
   "dependencies": {
     "lucide-react": "^0.454.0",
     "next": "15.1.3",
-    "react": "19.0.0-rc-69d4b800-20241021",
-    "react-dom": "19.0.0-rc-69d4b800-20241021",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
     "@vercel/postgres": "^0.10.0"
   },
   "devDependencies": {
