@@ -69,13 +69,13 @@
 }
 
 .btn {
-  @apply inline-flex items-center justify-center rounded-lg font-medium transition-all px-6 py-3 text-sm cursor-pointer border-none no-underline;
+  @apply inline-flex items-center justify-center rounded-lg font-medium transition-all px-6 py-3 text-sm cursor-pointer border-none no-underline shadow-lg shadow-black/20;
 }
 
 .btn-primary {
-  @apply bg-primary text-primary-foreground hover:bg-[hsl(142_71%_40%)] hover:-translate-y-px;
+  @apply bg-primary text-primary-foreground hover:bg-[hsl(142_71%_40%)] hover:-translate-y-px active:translate-y-0.5;
 }
 
 .input {
-  @apply block w-full rounded-lg border border-border bg-[hsl(var(--background)/0.5)] px-4 py-3 text-sm text-inherit transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20;
+  @apply block w-full rounded-lg border border-border bg-[hsl(var(--background)/0.5)] px-4 py-3 text-sm text-foreground transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground;
 }
