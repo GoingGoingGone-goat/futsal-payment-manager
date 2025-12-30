@@ -1,5 +1,6 @@
 import { getData, getPlayerStats } from '@/lib/storage';
 import { DollarSign, Trophy, Users, TrendingUp } from 'lucide-react';
+import CopyDebtButton from '@/components/CopyDebtButton';
 
 async function getDashboardData() {
     const data = await getData();
@@ -65,6 +66,7 @@ export default async function Home() {
                             <TrendingUp className="text-[hsl(var(--destructive))]" />
                             Outstanding Debts
                         </h2>
+                        <CopyDebtButton debtors={debtors} />
                     </div>
 
                     <div className="space-y-4">
@@ -110,7 +112,7 @@ export default async function Home() {
                         )}
                     </div>
                 </section>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
