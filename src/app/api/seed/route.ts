@@ -3,7 +3,7 @@ import { sql } from '@vercel/postgres';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  if (!process.env.POSTGRES_URL) {
+  if (!process.env.POSTGRES_URL && !process.env.DATABASE_URL) {
     return NextResponse.json({ error: 'Not running on Vercel Postgres' }, { status: 500 });
   }
 

@@ -36,15 +36,15 @@ export default async function PlayersPage() {
             {/* Players Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {players.map(player => (
-                    <div key={player.id} className="glass-card p-6 rounded-2xl flex flex-col justify-between group hover:border-[hsl(var(--primary)/0.5)] transition-colors">
+                    <Link href={`/players/${player.id}`} key={player.id} className="glass-card p-6 rounded-2xl flex flex-col justify-between group hover:border-[hsl(var(--primary)/0.5)] transition-colors cursor-pointer">
                         <div>
                             <div className="flex justify-between items-start mb-4">
                                 <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] flex items-center justify-center text-xl font-bold text-white">
                                     {player.name.charAt(0)}
                                 </div>
                                 <div className={`px-3 py-1 rounded-full text-sm font-bold ${player.owed > 0
-                                        ? 'bg-[hsl(var(--destructive)/0.2)] text-[hsl(var(--destructive))]'
-                                        : 'bg-[hsl(var(--primary)/0.2)] text-[hsl(var(--primary))]'
+                                    ? 'bg-[hsl(var(--destructive)/0.2)] text-[hsl(var(--destructive))]'
+                                    : 'bg-[hsl(var(--primary)/0.2)] text-[hsl(var(--primary))]'
                                     }`}>
                                     {player.owed > 0 ? `Owes $${player.owed.toFixed(2)}` : 'Settled'}
                                 </div>
@@ -65,7 +65,7 @@ export default async function PlayersPage() {
                                 <span className="text-[hsl(var(--primary))]">${player.totalPaid.toFixed(2)}</span>
                             </div>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         </div>

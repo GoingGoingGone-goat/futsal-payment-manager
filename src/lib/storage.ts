@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { sql } from '@vercel/postgres';
 
 const DATA_FILE = path.join(process.cwd(), 'data.json');
-const USE_DB = !!process.env.POSTGRES_URL;
+const USE_DB = !!process.env.POSTGRES_URL || !!process.env.DATABASE_URL;
 
 export interface Player {
     id: string;
