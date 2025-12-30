@@ -1,14 +1,14 @@
-import { getData, getPlayerStats } from '@/lib/storage';
+import { getData, calculatePlayerStats } from '@/lib/storage';
 import { createPlayer } from '@/app/actions';
 import { UserPlus, Wallet } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function PlayersPage() {
     const data = await getData();
-    const players = await Promise.all(data.players.map(async p => {
-        const stats = await getPlayerStats(p.id);
+    const players = data.players.map(p => {
+        const stats = calculatePlayerStats(data, p.id);
         return { ...p, ...stats };
-    }));
+    });
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">

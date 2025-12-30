@@ -175,9 +175,7 @@ export async function addPayment(payment: Omit<Payment, 'id'>) {
     }
 }
 
-export async function getPlayerStats(playerId: string) {
-    const data = await getData();
-
+export function calculatePlayerStats(data: Schema, playerId: string) {
     const playedGames = data.games.filter(g => g.players.some(p => p.playerId === playerId));
     const payments = data.payments.filter(p => p.playerId === playerId);
 
@@ -200,6 +198,11 @@ export async function getPlayerStats(playerId: string) {
             payments: payments
         }
     };
+}
+
+export async function getPlayerStats(playerId: string) {
+    const data = await getData();
+    return calculatePlayerStats(data, playerId);
 }
 
 export async function deletePlayer(id: string) {
