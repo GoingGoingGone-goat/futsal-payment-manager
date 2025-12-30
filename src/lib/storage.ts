@@ -201,3 +201,41 @@ export async function getPlayerStats(playerId: string) {
         }
     };
 }
+
+export async function deletePlayer(id: string) {
+    if (USE_DB) {
+        await sql`DELETE FROM payments WHERE player_id = ${id}`;
+        await sql`DELETE FROM game_players WHERE player_id = ${id}`;
+        await sql`DELETE FROM players WHERE id = ${id}`;
+    } else {
+        const data = await getLocalData();
+        data.players = data.players.filter(p => p.id !== id);
+        data.payments = data.payments.filter(p => p.playerId !== id);
+        data.games = data.games.map(g => ({
+            ...g,
+            players: g.players.filter(p => p.playerId !== id)
+        }));
+        await saveLocalData(data);
+    }
+}
+
+export async function deleteGame(id: string) {
+    if (USE_DB) {
+        await sql`DELETE FROM game_players WHERE game_id = ${id}`;
+        await sql`DELETE FROM games WHERE id = ${id}`;
+    } else {
+        const data = await getLocalData();
+        data.games = data.games.filter(g => g.id !== id);
+        await saveLocalData(data);
+    }
+}
+
+export async function deletePayment(id: string) {
+    if (USE_DB) {
+        await sql`DELETE FROM payments WHERE id = ${id}`;
+    } else {
+        const data = await getLocalData();
+        data.payments = data.payments.filter(p => p.id !== id);
+        await saveLocalData(data);
+    }
+}

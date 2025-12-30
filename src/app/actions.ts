@@ -1,6 +1,6 @@
 'use server';
 
-import { addGame, addPayment, addPlayer, getData } from "@/lib/storage";
+import { addGame, addPayment, addPlayer, getData, deletePlayer, deleteGame, deletePayment } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
 
 export async function createPlayer(formData: FormData) {
@@ -58,4 +58,24 @@ export async function createGame(formData: FormData) {
     revalidatePath('/');
     revalidatePath('/games');
     revalidatePath(`/teams/${opponent}`); // Revalidate the opponent history page if it exists
+}
+
+export async function deletePlayerAction(id: string) {
+    await deletePlayer(id);
+    revalidatePath('/');
+    revalidatePath('/players');
+    revalidatePath('/games');
+}
+
+export async function deleteGameAction(id: string) {
+    await deleteGame(id);
+    revalidatePath('/');
+    revalidatePath('/games');
+}
+
+export async function deletePaymentAction(id: string) {
+    await deletePayment(id);
+    revalidatePath('/');
+    revalidatePath('/payments');
+    revalidatePath('/players');
 }

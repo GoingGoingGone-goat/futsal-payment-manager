@@ -1,6 +1,7 @@
 
 import { getData, getPlayerStats } from '@/lib/storage';
-import { ArrowLeft, History, Trophy, Wallet } from 'lucide-react';
+import { deletePlayerAction } from '@/app/actions';
+import { ArrowLeft, History, Trophy, Trash2, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -23,9 +24,16 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <header>
-                <Link href="/players" className="inline-flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--primary))] mb-4 transition-colors">
-                    <ArrowLeft size={16} /> Back to Players
-                </Link>
+                <div className="flex justify-between items-center mb-4">
+                    <Link href="/players" className="inline-flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--primary))] transition-colors">
+                        <ArrowLeft size={16} /> Back to Players
+                    </Link>
+                    <form action={deletePlayerAction.bind(null, playerId)}>
+                        <button type="submit" className="text-red-500 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <Trash2 size={16} /> Delete Player
+                        </button>
+                    </form>
+                </div>
                 <div className="flex items-center gap-4">
                     <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] flex items-center justify-center text-3xl font-bold text-white">
                         {player.name.charAt(0)}

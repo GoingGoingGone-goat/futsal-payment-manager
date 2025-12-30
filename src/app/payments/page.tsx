@@ -1,6 +1,6 @@
 import { getData } from '@/lib/storage';
-import { createPayment } from '@/app/actions';
-import { BadgeDollarSign, History } from 'lucide-react';
+import { createPayment, deletePaymentAction } from '@/app/actions';
+import { BadgeDollarSign, History, Trash2 } from 'lucide-react';
 
 export default async function PaymentsPage() {
     const data = await getData();
@@ -65,6 +65,7 @@ export default async function PaymentsPage() {
                                         <th className="p-4 font-medium">Date</th>
                                         <th className="p-4 font-medium">Player</th>
                                         <th className="p-4 font-medium text-right">Amount</th>
+                                        <th className="p-4 font-medium w-[50px]"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[hsl(var(--border))]">
@@ -81,6 +82,13 @@ export default async function PaymentsPage() {
                                                 <td className="p-4 text-right font-bold text-[hsl(var(--primary))]">
                                                     +${payment.amount.toFixed(2)}
                                                 </td>
+                                                <td className="p-4">
+                                                    <form action={deletePaymentAction.bind(null, payment.id)}>
+                                                        <button type="submit" className="text-muted-foreground hover:text-red-500 transition-colors" title="Delete Payment">
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </form>
+                                                </td>
                                             </tr>
                                         );
                                     })}
@@ -90,6 +98,6 @@ export default async function PaymentsPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

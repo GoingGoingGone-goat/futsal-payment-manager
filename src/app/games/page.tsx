@@ -1,6 +1,6 @@
 import { getData } from '@/lib/storage';
-import { createGame } from '@/app/actions';
-import { Calendar, PlusCircle, User } from 'lucide-react';
+import { createGame, deleteGameAction } from '@/app/actions';
+import { Calendar, PlusCircle, Trash2, User } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function GamesPage() {
@@ -131,6 +131,12 @@ export default async function GamesPage() {
                                         </div>
                                     )}
                                 </div>
+
+                                <form action={deleteGameAction.bind(null, game.id)} className="ml-4 self-center">
+                                    <button type="submit" className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors" title="Delete Game">
+                                        <Trash2 size={18} />
+                                    </button>
+                                </form>
                             </div>
                         ))
                     )}
