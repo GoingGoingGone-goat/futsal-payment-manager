@@ -38,6 +38,15 @@ export default async function PaymentsPage() {
                             </div>
 
                             <div>
+                                <label className="block text-sm font-medium mb-1 text-muted">Season</label>
+                                <select name="season" defaultValue="Season 3" className="input">
+                                    <option value="Season 3">Season 3</option>
+                                    <option value="Season 2">Season 2</option>
+                                    <option value="Season 1">Season 1</option>
+                                </select>
+                            </div>
+
+                            <div>
                                 <label className="block text-sm font-medium mb-1 text-muted">Date Received</label>
                                 <input required name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="input" />
                             </div>

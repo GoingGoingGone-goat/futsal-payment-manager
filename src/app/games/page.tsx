@@ -22,9 +22,19 @@ export default async function GamesPage() {
                             <PlusCircle size={20} className="text-[hsl(var(--secondary))]" /> Record New Game
                         </h2>
                         <form action={createGame} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-muted">Opponent</label>
-                                <input required name="opponent" type="text" placeholder="vs Team Name" className="input" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-muted">Season</label>
+                                    <select name="season" defaultValue="Season 3" className="input">
+                                        <option value="Season 3">Season 3</option>
+                                        <option value="Season 2">Season 2</option>
+                                        <option value="Season 1">Season 1</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-muted">Opponent</label>
+                                    <input required name="opponent" type="text" placeholder="vs Team Name" className="input" />
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -98,6 +108,9 @@ export default async function GamesPage() {
                                         <span className="bg-[hsl(var(--accent))] text-xs px-2 py-0.5 rounded text-muted-foreground">
                                             ${game.costPerPlayer.toFixed(2)}/player
                                         </span>
+                                        <span className="bg-[hsl(var(--secondary)/0.2)] text-[hsl(var(--secondary))] text-xs px-2 py-0.5 rounded font-medium">
+                                            {game.season || 'Season 3'}
+                                        </span>
                                     </div>
                                     <h3 className="text-xl font-bold flex items-center gap-3">
                                         <span className="text-muted-foreground">vs</span>
@@ -142,6 +155,6 @@ export default async function GamesPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

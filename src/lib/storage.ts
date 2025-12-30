@@ -23,6 +23,7 @@ export interface Game {
     score: string;
     players: PlayerPerformance[];
     costPerPlayer: number;
+    season: string;
 }
 
 export interface Payment {
@@ -30,6 +31,7 @@ export interface Payment {
     playerId: string;
     amount: number;
     date: string;
+    season: string;
 }
 
 export interface Schema {
@@ -96,6 +98,7 @@ async function getDbData(): Promise<Schema> {
             opponent: row.opponent,
             score: row.score,
             costPerPlayer: Number(row.cost_per_player),
+            season: row.season || 'Season 3', // Default for legacy rows
             players: gamePlayersRes.rows
                 .filter(gp => gp.game_id === row.id)
                 .map(gp => ({
@@ -108,7 +111,8 @@ async function getDbData(): Promise<Schema> {
             id: row.id,
             playerId: row.player_id,
             amount: Number(row.amount),
-            date: row.date
+            date: row.date,
+            season: row.season || 'Season 3' // Default for legacy rows
         }));
 
         return {
@@ -145,7 +149,7 @@ export async function addPlayer(name: string) {
 export async function addGame(game: Omit<Game, 'id'>) {
     const id = randomUUID();
     if (USE_DB) {
-        await sql`INSERT INTO games (id, date, opponent, score, cost_per_player) VALUES (${id}, ${game.date}, ${game.opponent}, ${game.score}, ${game.costPerPlayer})`;
+        await sql`INSERT INTO games (id, date, opponent, score, cost_per_player, season) VALUES (${id}, ${game.date}, ${game.opponent}, ${game.score}, ${game.costPerPlayer}, ${game.season})`;
 
         for (const p of game.players) {
             await sql`INSERT INTO game_players (game_id, player_id, goals) VALUES (${id}, ${p.playerId}, ${p.goals})`;
@@ -154,7 +158,11 @@ export async function addGame(game: Omit<Game, 'id'>) {
         return { ...game, id };
     } else {
         const data = await getLocalData();
-        const newGame = { ...game, id };
+        const newGame = {
+            ...game,
+            id,
+            season: game.season || 'Season 3'
+        };
         data.games.push(newGame);
         await saveLocalData(data);
         return newGame;
@@ -164,11 +172,15 @@ export async function addGame(game: Omit<Game, 'id'>) {
 export async function addPayment(payment: Omit<Payment, 'id'>) {
     const id = randomUUID();
     if (USE_DB) {
-        await sql`INSERT INTO payments (id, player_id, amount, date) VALUES (${id}, ${payment.playerId}, ${payment.amount}, ${payment.date})`;
+        await sql`INSERT INTO payments (id, player_id, amount, date, season) VALUES (${id}, ${payment.playerId}, ${payment.amount}, ${payment.date}, ${payment.season})`;
         return { ...payment, id };
     } else {
         const data = await getLocalData();
-        const newPayment = { ...payment, id };
+        const newPayment = {
+            ...payment,
+            id,
+            season: payment.season || 'Season 3'
+        };
         data.payments.push(newPayment);
         await saveLocalData(data);
         return newPayment;
@@ -187,12 +199,40 @@ export function calculatePlayerStats(data: Schema, playerId: string) {
         return sum + (playerPerf?.goals || 0);
     }, 0);
 
+    // Group by Season
+    const seasons: Record<string, { gamesPlayed: number, goalsScored: number, totalCost: number, totalPaid: number, owed: number }> = {};
+
+    // Initialize seasons from games
+    playedGames.forEach(g => {
+        const s = g.season || 'Season 3';
+        if (!seasons[s]) seasons[s] = { gamesPlayed: 0, goalsScored: 0, totalCost: 0, totalPaid: 0, owed: 0 };
+
+        seasons[s].gamesPlayed++;
+        seasons[s].totalCost += g.costPerPlayer;
+
+        const playerPerf = g.players.find(p => p.playerId === playerId);
+        seasons[s].goalsScored += (playerPerf?.goals || 0);
+    });
+
+    // Initialize/Update seasons from payments
+    payments.forEach(p => {
+        const s = p.season || 'Season 3';
+        if (!seasons[s]) seasons[s] = { gamesPlayed: 0, goalsScored: 0, totalCost: 0, totalPaid: 0, owed: 0 };
+        seasons[s].totalPaid += p.amount;
+    });
+
+    // Calculate owed per season
+    Object.keys(seasons).forEach(s => {
+        seasons[s].owed = seasons[s].totalCost - seasons[s].totalPaid;
+    });
+
     return {
         gamesPlayed: playedGames.length,
         goalsScored,
         totalCost,
         totalPaid,
         owed: totalCost - totalPaid,
+        seasons, // <--- New Field
         history: {
             games: playedGames,
             payments: payments

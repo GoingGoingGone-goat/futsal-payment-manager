@@ -46,9 +46,15 @@ export async function GET() {
     // Attempt to add column if it doesn't exist (primitive migration)
     try {
       await sql`ALTER TABLE game_players ADD COLUMN IF NOT EXISTS goals INTEGER DEFAULT 0;`;
-    } catch (e) {
-      // Ignore if fails (likely already exists)
-    }
+    } catch (e) { /* Ignore */ }
+
+    try {
+      await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS season VARCHAR(20) DEFAULT 'Season 3';`;
+    } catch (e) { /* Ignore */ }
+
+    try {
+      await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS season VARCHAR(20) DEFAULT 'Season 3';`;
+    } catch (e) { /* Ignore */ }
 
     return NextResponse.json({ message: 'Database seeded successfully' }, { status: 200 });
   } catch (error) {

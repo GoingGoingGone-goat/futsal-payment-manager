@@ -72,6 +72,34 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                 </div>
             </div>
 
+            {/* Season Breakdown */}
+            <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-muted-foreground">Season Breakdown</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {stats.seasons && Object.entries(stats.seasons)
+                        .sort((a, b) => b[0].localeCompare(a[0])) // Sort Season 3, Season 2...
+                        .map(([seasonName, s]) => (
+                            <div key={seasonName} className="glass-card p-6 rounded-2xl relative overflow-hidden">
+                                <h3 className="text-lg font-bold mb-4 border-b border-[hsl(var(--border))] pb-2">{seasonName}</h3>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted">Games</span>
+                                        <span className="font-bold">{s.gamesPlayed}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted">Goals</span>
+                                        <span className="font-bold text-[hsl(var(--secondary))]">{s.goalsScored}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted">Paid</span>
+                                        <span className="font-bold text-[hsl(var(--primary))]">${s.totalPaid.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Payment History */}
                 <div className="space-y-4">
