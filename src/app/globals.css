@@ -52,6 +52,10 @@
 }
 
 /* Glassmorphism Utilities */
+.text-muted {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
 .glass {
   background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(10px);
