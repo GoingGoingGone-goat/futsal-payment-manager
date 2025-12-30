@@ -8,6 +8,8 @@ export async function createPlayer(formData: FormData) {
     await addPlayer(name);
     revalidatePath('/');
     revalidatePath('/players');
+    revalidatePath('/games');
+    revalidatePath('/payments');
 }
 
 export async function createPayment(formData: FormData) {
