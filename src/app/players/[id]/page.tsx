@@ -4,6 +4,7 @@ import { deletePlayerAction } from '@/app/actions';
 import { ArrowLeft, History, Trophy, Trash2, Wallet, BadgeDollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { EditablePlayerName } from '@/components/EditablePlayerName';
 
 export default async function PlayerPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = await params;
@@ -39,7 +40,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                         {player.name.charAt(0)}
                     </div>
                     <div>
-                        <h1 className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 leading-tight">{player.name}</h1>
+                        <EditablePlayerName id={player.id} initialName={player.name} />
                         <div className={`inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-sm font-bold mt-2 ${stats.owed > 0 ? 'bg-[hsl(var(--destructive)/0.2)] text-[hsl(var(--destructive))]' : 'bg-[hsl(var(--primary)/0.2)] text-[hsl(var(--primary))]'
                             }`}>
                             {stats.owed > 0 ? `Owes $${stats.owed.toFixed(2)}` : 'All Settled'}

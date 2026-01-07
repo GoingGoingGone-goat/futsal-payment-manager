@@ -369,6 +369,49 @@ export async function deleteFee(id: string) {
     }
 }
 
+// --- Update Functions ---
+
+export async function updatePlayer(id: string, name: string) {
+    if (USE_DB) {
+        await sql`UPDATE players SET name = ${name} WHERE id = ${id}`;
+        return { id, name };
+    } else {
+        const data = await getLocalData();
+        const player = data.players.find(p => p.id === id);
+        if (player) {
+            player.name = name;
+            await saveLocalData(data);
+        }
+        return player;
+    }
+}
+
+export async function updateGame(id: string, gameData: Partial<Game>) {
+    if (USE_DB) {
+        // Construct dynamic query parts
+        if (gameData.date) await sql`UPDATE games SET date = ${gameData.date} WHERE id = ${id}`;
+        if (gameData.opponent) await sql`UPDATE games SET opponent = ${gameData.opponent} WHERE id = ${id}`;
+        if (gameData.score) await sql`UPDATE games SET score = ${gameData.score} WHERE id = ${id}`;
+        if (gameData.season) await sql`UPDATE games SET season = ${gameData.season} WHERE id = ${id}`;
+
+        // Note: Editing actual players/goals in a game is complex and skipped for now in this function
+        // unless we want to do a full delete/re-insert of game_players which is safer but heavier.
+
+        return { id, ...gameData };
+    } else {
+        const data = await getLocalData();
+        const game = data.games.find(g => g.id === id);
+        if (game) {
+            if (gameData.date) game.date = gameData.date;
+            if (gameData.opponent) game.opponent = gameData.opponent;
+            if (gameData.score) game.score = gameData.score;
+            if (gameData.season) game.season = gameData.season;
+            await saveLocalData(data);
+        }
+        return game;
+    }
+}
+
 // --- Advanced Analytics ---
 
 export interface AdvancedStats {

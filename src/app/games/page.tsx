@@ -1,6 +1,6 @@
 import { getData } from '@/lib/storage';
 import { createGame, deleteGameAction } from '@/app/actions';
-import { Calendar, PlusCircle, Trash2, User } from 'lucide-react';
+import { Calendar, PlusCircle, Trash2, User, Pencil } from 'lucide-react';
 import Link from 'next/link';
 
 import { FlashMessage } from '@/components/FlashMessage';
@@ -150,7 +150,10 @@ export default async function GamesPage() {
                                     )}
                                 </div>
 
-                                <form action={deleteGameAction.bind(null, game.id)} className="ml-4 self-center">
+                                <Link href={`/games/${game.id}/edit`} className="p-2 text-muted-foreground hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.1)] rounded-full transition-colors" title="Edit Game">
+                                    <Pencil size={18} />
+                                </Link>
+                                <form action={deleteGameAction.bind(null, game.id)} className="ml-2 self-center">
                                     <button type="submit" className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors" title="Delete Game">
                                         <Trash2 size={18} />
                                     </button>

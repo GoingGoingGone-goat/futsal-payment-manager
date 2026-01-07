@@ -10,6 +10,21 @@ async function getDashboardData() {
 
     const totalOwed = playerStats.reduce((sum, s) => sum + s.owed, 0);
     const totalGames = data.games.length;
+
+    // Calculate Record
+    let wins = 0;
+    let losses = 0;
+    let draws = 0;
+
+    data.games.forEach(g => {
+        const parts = g.score.split('-').map(s => parseInt(s.trim()));
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            if (parts[0] > parts[1]) wins++;
+            else if (parts[0] < parts[1]) losses++;
+            else draws++;
+        }
+    });
+
     const activePlayers = data.players.length;
 
     // Players who owe money, sorted by amount desc
@@ -20,11 +35,11 @@ async function getDashboardData() {
 
     const recentGames = [...data.games].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
-    return { totalOwed, totalGames, activePlayers, debtors, recentGames };
+    return { totalOwed, totalGames, activePlayers, debtors, recentGames, record: { wins, losses, draws } };
 }
 
 export default async function Home() {
-    const { totalOwed, totalGames, activePlayers, debtors, recentGames } = await getDashboardData();
+    const { totalOwed, totalGames, activePlayers, debtors, recentGames, record } = await getDashboardData();
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -49,6 +64,17 @@ export default async function Home() {
                     </div>
                     <h3 className="text-sm font-medium text-muted">Games Played</h3>
                     <p className="text-4xl font-bold mt-2">{totalGames}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded">
+                            {record.wins} W
+                        </span>
+                        <span className="text-xs font-bold bg-red-500/20 text-red-500 px-2 py-0.5 rounded">
+                            {record.losses} L
+                        </span>
+                        <span className="text-xs font-bold bg-slate-500/20 text-slate-400 px-2 py-0.5 rounded">
+                            {record.draws} D
+                        </span>
+                    </div>
                 </div>
 
                 <div className="glass-card p-6 rounded-2xl relative overflow-hidden group">

@@ -1,6 +1,6 @@
 'use server';
 
-import { addGame, addPayment, addPlayer, addFee, getData, deletePlayer, deleteGame, deletePayment, deleteFee } from "@/lib/storage";
+import { addGame, addPayment, addPlayer, addFee, getData, deletePlayer, deleteGame, deletePayment, deleteFee, updatePlayer, updateGame } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -134,4 +134,41 @@ export async function deleteFeeAction(id: string) {
     revalidatePath('/fees');
     revalidatePath('/players');
     redirect('/fees?msg=fee_deleted');
+}
+
+// --- Update Actions ---
+
+export async function editPlayer(formData: FormData) {
+    const id = formData.get('id') as string;
+    const name = formData.get('name') as string;
+
+    if (!id || !name) return;
+
+    await updatePlayer(id, name);
+    revalidatePath(`/players/${id}`);
+    revalidatePath('/players');
+}
+
+export async function editGame(formData: FormData) {
+    const id = formData.get('id') as string;
+    const date = formData.get('date') as string;
+    const opponent = formData.get('opponent') as string;
+    const scoreMy = formData.get('scoreMy') as string;
+    const scoreTheir = formData.get('scoreTheir') as string;
+    const season = formData.get('season') as string;
+
+    if (!id || !date || !opponent) return;
+
+    const score = `${scoreMy}-${scoreTheir}`;
+
+    await updateGame(id, {
+        date,
+        opponent,
+        score,
+        season
+    });
+
+    revalidatePath('/games');
+    revalidatePath(`/games/${id}`);
+    redirect('/games?msg=updated');
 }
