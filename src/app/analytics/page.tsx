@@ -1,12 +1,34 @@
-
+import Link from 'next/link';
 import { getAdvancedStats, getData } from '@/lib/storage';
 import { BarChart3, Crown, Flame, Target, Trophy, Zap, Shield } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AnalyticsPage() {
+export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
+    const { season } = await searchParams; // Await searchParams in Next.js 15
+    const currentSeason = season || 'All';
+
     const data = await getData();
-    const stats = getAdvancedStats(data);
+
+    // Sort logic handled in storage, just pass filter
+    const stats = getAdvancedStats(data, currentSeason);
+
+    const SeasonTab = ({ label, value }: { label: string, value: string }) => {
+        const isActive = currentSeason === value;
+        return (
+            <Link
+                href={value === 'All' ? '/analytics' : `/analytics?season=${value}`}
+                className={`
+                    px-4 py-2 rounded-full text-sm font-medium transition-all
+                    ${isActive
+                        ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-[hsl(var(--primary)/0.3)]'
+                        : 'bg-[hsl(var(--accent))] text-muted-foreground hover:bg-[hsl(var(--accent)/0.8)] hover:text-foreground'}
+                `}
+            >
+                {label}
+            </Link>
+        );
+    };
 
     const Leaderboard = ({ title, icon: Icon, data, suffix = '', precision = 0, description }: any) => (
         <div className="glass-card p-6 rounded-2xl flex flex-col h-full max-h-[500px]">
@@ -52,9 +74,18 @@ export default async function AnalyticsPage() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <header>
-                <h1 className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Analytics</h1>
-                <p className="text-muted">Advanced player performance metrics.</p>
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Analytics</h1>
+                    <p className="text-muted">Advanced player performance metrics.</p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                    <SeasonTab label="All Time" value="All" />
+                    <SeasonTab label="Season 1" value="Season 1" />
+                    <SeasonTab label="Season 2" value="Season 2" />
+                    <SeasonTab label="Season 3" value="Season 3" />
+                </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

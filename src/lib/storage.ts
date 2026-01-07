@@ -380,9 +380,15 @@ export interface AdvancedStats {
     fightingSpirit: { id: string; name: string; value: number }[];
 }
 
-export function getAdvancedStats(data: Schema): AdvancedStats {
+export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedStats {
     const stats = data.players.map(player => {
-        const games = data.games.filter(g => g.players.some(p => p.playerId === player.id));
+        // Filter games by season if provided
+        const allGames = data.games;
+        const relevantGames = (seasonFilter && seasonFilter !== 'All')
+            ? allGames.filter(g => g.season === seasonFilter)
+            : allGames;
+
+        const games = relevantGames.filter(g => g.players.some(p => p.playerId === player.id));
         const totalGames = games.length;
 
         let goalsInWins = 0;
