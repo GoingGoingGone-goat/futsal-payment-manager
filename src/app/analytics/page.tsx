@@ -155,7 +155,16 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                     <Zap className="text-yellow-500" /> Power Rankings <span className="text-sm font-normal text-muted">(Individual Impact)</span>
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Offensive Rating */}
+                    <Leaderboard
+                        title="The Spearhead"
+                        icon={Target}
+                        data={stats.offensiveRating}
+                        precision={2}
+                        description="Offensive Rating: Average goals scored by the team when this player is on the pitch (Higher is better)."
+                    />
+
                     {/* Defensive Rating */}
                     <Leaderboard
                         title="The Individual Wall"

@@ -423,6 +423,7 @@ export interface AdvancedStats {
     fightingSpirit: { id: string; name: string; value: number }[];
     defensiveRating: { id: string; name: string; value: number }[];
     netRating: { id: string; name: string; value: number }[];
+    offensiveRating: { id: string; name: string; value: number }[];
 }
 
 export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedStats {
@@ -520,7 +521,13 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
         .map(s => ({ ...s, value: s.teamGoalsAgainst / s.totalGames }))
         .sort((a, b) => a.value - b.value);
 
-    // 8. Net Rating (Avg Goal Diff, Higher is Better)
+    // 8. Offensive Rating (Avg Goals Scored, Higher is Better)
+    const offensiveRating = stats
+        .filter(s => s.totalGames >= 3)
+        .map(s => ({ ...s, value: s.teamGoalsFor / s.totalGames }))
+        .sort((a, b) => b.value - a.value);
+
+    // 9. Net Rating (Avg Goal Diff, Higher is Better)
     const netRating = stats
         .filter(s => s.totalGames >= 3)
         .map(s => ({ ...s, value: (s.teamGoalsFor - s.teamGoalsAgainst) / s.totalGames }))
@@ -534,6 +541,7 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
         clutchFactor,
         fightingSpirit,
         defensiveRating,
+        offensiveRating,
         netRating
     };
 }
