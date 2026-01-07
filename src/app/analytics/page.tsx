@@ -220,6 +220,5 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
             </div>
 
         </div>
-        </div >
     );
 }
