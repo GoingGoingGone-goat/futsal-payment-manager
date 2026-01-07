@@ -2,6 +2,8 @@ import { getData, getPlayerStats } from '@/lib/storage';
 import { DollarSign, Trophy, Users, TrendingUp } from 'lucide-react';
 import CopyDebtButton from '@/components/CopyDebtButton';
 
+export const dynamic = 'force-dynamic';
+
 async function getDashboardData() {
     const data = await getData();
     const playerStats = await Promise.all(data.players.map(p => getPlayerStats(p.id)));

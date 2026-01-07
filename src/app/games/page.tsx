@@ -5,6 +5,8 @@ import Link from 'next/link';
 
 import { FlashMessage } from '@/components/FlashMessage';
 
+export const dynamic = 'force-dynamic';
+
 export default async function GamesPage() {
     const data = await getData();
     const sortedGames = [...data.games].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

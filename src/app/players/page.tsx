@@ -5,6 +5,8 @@ import Link from 'next/link';
 
 import { FlashMessage } from '@/components/FlashMessage';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PlayersPage() {
     const data = await getData();
     const players = data.players.map(p => {
