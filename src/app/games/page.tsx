@@ -3,12 +3,15 @@ import { createGame, deleteGameAction } from '@/app/actions';
 import { Calendar, PlusCircle, Trash2, User } from 'lucide-react';
 import Link from 'next/link';
 
+import { FlashMessage } from '@/components/FlashMessage';
+
 export default async function GamesPage() {
     const data = await getData();
     const sortedGames = [...data.games].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            <FlashMessage />
             <header>
                 <h1 className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Games</h1>
                 <p className="text-muted">Record match results and billing.</p>

@@ -98,12 +98,14 @@ export async function deletePlayerAction(id: string) {
     revalidatePath('/');
     revalidatePath('/players');
     revalidatePath('/games');
+    redirect('/players?msg=player_deleted');
 }
 
 export async function deleteGameAction(id: string) {
     await deleteGame(id);
     revalidatePath('/');
     revalidatePath('/games');
+    redirect('/games?msg=game_deleted');
 }
 
 export async function deletePaymentAction(id: string) {
@@ -111,4 +113,5 @@ export async function deletePaymentAction(id: string) {
     revalidatePath('/');
     revalidatePath('/payments');
     revalidatePath('/players');
+    redirect('/payments?msg=payment_deleted');
 }

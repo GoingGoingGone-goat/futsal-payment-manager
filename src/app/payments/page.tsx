@@ -2,6 +2,8 @@ import { getData } from '@/lib/storage';
 import { createPayment, deletePaymentAction } from '@/app/actions';
 import { BadgeDollarSign, History, Trash2 } from 'lucide-react';
 
+import { FlashMessage } from '@/components/FlashMessage';
+
 export default async function PaymentsPage() {
     const data = await getData();
     // Sort payments new to old
@@ -9,6 +11,7 @@ export default async function PaymentsPage() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            <FlashMessage />
             <header>
                 <h1 className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Payments</h1>
                 <p className="text-muted">Track incoming funds.</p>

@@ -3,6 +3,8 @@ import { createPlayer } from '@/app/actions';
 import { UserPlus, Wallet } from 'lucide-react';
 import Link from 'next/link';
 
+import { FlashMessage } from '@/components/FlashMessage';
+
 export default async function PlayersPage() {
     const data = await getData();
     const players = data.players.map(p => {
@@ -12,6 +14,7 @@ export default async function PlayersPage() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            <FlashMessage />
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Players</h1>
