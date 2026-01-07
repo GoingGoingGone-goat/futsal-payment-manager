@@ -511,3 +511,63 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
         fightingSpirit
     };
 }
+
+// --- Team Stats ---
+
+export interface TeamStats {
+    name: string;
+    gamesPlayed: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    goalsScored: number;
+    goalsConceded: number;
+    lastPlayed: string;
+    goalDifference: number;
+}
+
+export async function getAllTeamStats(): Promise<TeamStats[]> {
+    const data = await getData();
+    const teams: Record<string, TeamStats> = {};
+
+    data.games.forEach(game => {
+        const opponent = game.opponent;
+        if (!teams[opponent]) {
+            teams[opponent] = {
+                name: opponent,
+                gamesPlayed: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                goalsScored: 0,
+                goalsConceded: 0,
+                lastPlayed: game.date,
+                goalDifference: 0
+            };
+        }
+
+        const stats = teams[opponent];
+        stats.gamesPlayed++;
+
+        if (new Date(game.date) > new Date(stats.lastPlayed)) {
+            stats.lastPlayed = game.date;
+        }
+
+        // Parse Score "Us - Them"
+        const parts = game.score.split('-').map(s => parseInt(s.trim()));
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            const [us, them] = parts;
+            stats.goalsScored += us;
+            stats.goalsConceded += them;
+
+            if (us > them) stats.wins++;
+            else if (us < them) stats.losses++;
+            else stats.draws++;
+        }
+    });
+
+    return Object.values(teams).map(t => ({
+        ...t,
+        goalDifference: t.goalsScored - t.goalsConceded
+    })).sort((a, b) => new Date(b.lastPlayed).getTime() - new Date(a.lastPlayed).getTime());
+}
