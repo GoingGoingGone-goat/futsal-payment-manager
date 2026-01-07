@@ -125,7 +125,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                     data={stats.luckyCharm}
                     precision={1}
                     suffix="%"
-                    description="% of games won when this player is playing."
+                    description="% of games won when this player is playing (min 3 games)."
                 />
 
                 {/* 5. Clutch Factor (Goal Win %) */}
@@ -135,7 +135,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                     data={stats.clutchFactor}
                     precision={1}
                     suffix="%"
-                    description="% of this player's total goals scored in winning games."
+                    description="% of goals scored in winning games (min 3 games)."
                 />
 
                 {/* 6. Fighting Spirit (Goal Lose %) */}
@@ -145,7 +145,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                     data={stats.fightingSpirit}
                     precision={1}
                     suffix="%"
-                    description="% of this player's total goals scored in losing games."
+                    description="% of goals scored in losing games (min 3 games)."
                 />
 
             </div>

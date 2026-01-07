@@ -443,19 +443,19 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
 
     // 4. Lucky Charm (Win %)
     const luckyCharm = stats
-        .filter(s => s.totalGames > 0)
+        .filter(s => s.totalGames >= 3)
         .map(s => ({ ...s, value: (s.wins / s.totalGames) * 100 }))
         .sort((a, b) => b.value - a.value);
 
     // 5. Clutch Factor (% goals in wins)
     const clutchFactor = stats
-        .filter(s => s.totalGoals > 0)
+        .filter(s => s.totalGoals > 0 && s.totalGames >= 3)
         .map(s => ({ ...s, value: (s.goalsInWins / s.totalGoals) * 100 }))
         .sort((a, b) => b.value - a.value);
 
     // 6. Fighting Spirit (% goals in losses)
     const fightingSpirit = stats
-        .filter(s => s.totalGoals > 0)
+        .filter(s => s.totalGoals > 0 && s.totalGames >= 3)
         .map(s => ({ ...s, value: (s.goalsInLosses / s.totalGoals) * 100 }))
         .sort((a, b) => b.value - a.value);
 
