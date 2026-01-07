@@ -8,32 +8,34 @@ export default async function AnalyticsPage() {
     const data = await getData();
     const stats = getAdvancedStats(data);
 
-    const Leaderboard = ({ title, icon: Icon, data, suffix = '', precision = 0 }: any) => (
-        <div className="glass-card p-6 rounded-2xl flex flex-col h-full">
-            <div className="flex items-center gap-2 mb-6 border-b border-[hsl(var(--border))] pb-4">
+    const Leaderboard = ({ title, icon: Icon, data, suffix = '', precision = 0, description }: any) => (
+        <div className="glass-card p-6 rounded-2xl flex flex-col h-full max-h-[500px]">
+            <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 rounded-lg bg-[hsl(var(--secondary)/0.1)] text-[hsl(var(--secondary))]">
                     <Icon size={24} />
                 </div>
                 <h3 className="text-lg font-bold">{title}</h3>
             </div>
 
-            <div className="space-y-4 flex-1">
-                {data.slice(0, 5).map((player: any, index: number) => (
+            <p className="text-xs text-muted mb-4 h-[32px] leading-tight">{description}</p>
+
+            <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                {data.map((player: any, index: number) => (
                     <div key={player.id} className="flex items-center justify-between group">
                         <div className="flex items-center gap-3">
                             <span className={`
-                                w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold
+                                w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shrink-0
                                 ${index === 0 ? 'bg-yellow-500/20 text-yellow-500' :
                                     index === 1 ? 'bg-slate-400/20 text-slate-400' :
                                         index === 2 ? 'bg-orange-700/20 text-orange-700' : 'text-muted'}
                             `}>
                                 {index + 1}
                             </span>
-                            <span className="font-medium group-hover:text-[hsl(var(--primary))] transition-colors">
+                            <span className="font-medium group-hover:text-[hsl(var(--primary))] transition-colors truncate max-w-[120px]">
                                 {player.name}
                             </span>
                         </div>
-                        <span className="font-bold tabular-nums">
+                        <span className="font-bold tabular-nums shrink-0">
                             {player.value.toFixed(precision)}{suffix}
                         </span>
                     </div>
@@ -64,6 +66,7 @@ export default async function AnalyticsPage() {
                     data={stats.efficiency}
                     precision={2}
                     suffix=" G/G"
+                    description="Average goals scored per game (min. 3 games)."
                 />
 
                 {/* 2. Total Goals (Volume) */}
@@ -72,6 +75,7 @@ export default async function AnalyticsPage() {
                     icon={Trophy}
                     data={stats.totalGoals}
                     precision={0}
+                    description="Total goals scored across all games."
                 />
 
                 {/* 3. Games Played (Reliability) */}
@@ -80,6 +84,7 @@ export default async function AnalyticsPage() {
                     icon={Shield}
                     data={stats.gamesPlayed}
                     precision={0}
+                    description="Total number of games attended."
                 />
 
                 {/* 4. Lucky Charm (Win %) */}
@@ -89,6 +94,7 @@ export default async function AnalyticsPage() {
                     data={stats.luckyCharm}
                     precision={1}
                     suffix="%"
+                    description="% of games won when this player is playing."
                 />
 
                 {/* 5. Clutch Factor (Goal Win %) */}
@@ -98,6 +104,7 @@ export default async function AnalyticsPage() {
                     data={stats.clutchFactor}
                     precision={1}
                     suffix="%"
+                    description="% of this player's total goals scored in winning games."
                 />
 
                 {/* 6. Fighting Spirit (Goal Lose %) */}
@@ -107,6 +114,7 @@ export default async function AnalyticsPage() {
                     data={stats.fightingSpirit}
                     precision={1}
                     suffix="%"
+                    description="% of this player's total goals scored in losing games."
                 />
 
             </div>
