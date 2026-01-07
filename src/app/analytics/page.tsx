@@ -183,7 +183,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                             <div className="p-2 rounded-lg bg-green-500/10 text-green-500"><Trophy size={24} /></div>
                             <h3 className="text-lg font-bold">Match Winners</h3>
                         </div>
-                        <p className="text-lg text-muted mb-4">Highest Win % (min 3 games).</p>
+                        <p className="text-lg text-muted mb-4">Highest Win % (min 5 games).</p>
                         <div className="space-y-3">
                             {synergy.matchWinners.map((trio, i) => (
                                 <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
@@ -203,7 +203,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                             <div className="p-2 rounded-lg bg-red-500/10 text-red-500"><Shield size={24} /></div>
                             <h3 className="text-lg font-bold">The Wall</h3>
                         </div>
-                        <p className="text-lg text-muted mb-4">Lowest Avg Goals Conceded (min 3 games).</p>
+                        <p className="text-lg text-muted mb-4">Lowest Avg Goals Conceded (min 5 games).</p>
                         <div className="space-y-3">
                             {synergy.theWall.map((trio, i) => (
                                 <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">

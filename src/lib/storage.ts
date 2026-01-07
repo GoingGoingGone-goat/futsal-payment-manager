@@ -632,17 +632,17 @@ export function getSynergyStats(data: Schema, seasonFilter?: string): SynergySta
         .slice(0, 5)
         .map(t => ({ playerIds: t.playerIds, playerNames: t.playerNames, value: t.games }));
 
-    // 2. Match Winners (Win %, min 3 games)
+    // 2. Match Winners (Win %, min 5 games)
     const matchWinners = [...allTrios]
-        .filter(t => t.games >= 3)
+        .filter(t => t.games >= 5)
         .map(t => ({ ...t, value: (t.wins / t.games) * 100 }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 5)
         .map(t => ({ playerIds: t.playerIds, playerNames: t.playerNames, value: t.value, gamesPlayed: t.games }));
 
-    // 3. The Wall (Avg Goals Conceded, min 3 games)
+    // 3. The Wall (Avg Goals Conceded, min 5 games)
     const theWall = [...allTrios]
-        .filter(t => t.games >= 3)
+        .filter(t => t.games >= 5)
         .map(t => ({ ...t, value: t.goalsConceded / t.games }))
         .sort((a, b) => a.value - b.value) // Lower is better
         .slice(0, 5)
