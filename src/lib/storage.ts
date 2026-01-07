@@ -359,6 +359,16 @@ export async function deletePayment(id: string) {
     }
 }
 
+export async function deleteFee(id: string) {
+    if (USE_DB) {
+        await sql`DELETE FROM fees WHERE id=${id}`;
+    } else {
+        const data = await getLocalData();
+        data.fees = data.fees.filter(f => f.id !== id);
+        await saveLocalData(data);
+    }
+}
+
 // --- Advanced Analytics ---
 
 export interface AdvancedStats {
