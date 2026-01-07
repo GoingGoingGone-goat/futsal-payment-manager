@@ -359,12 +359,96 @@ export async function deletePayment(id: string) {
     }
 }
 
-export async function deleteFee(id: string) {
-    if (USE_DB) {
-        await sql`DELETE FROM fees WHERE id=${id}`;
-    } else {
-        const data = await getLocalData();
-        data.fees = data.fees.filter(f => f.id !== id);
-        await saveLocalData(data);
-    }
+// --- Advanced Analytics ---
+
+export interface AdvancedStats {
+    efficiency: { id: string; name: string; value: number }[];
+    totalGoals: { id: string; name: string; value: number }[];
+    gamesPlayed: { id: string; name: string; value: number }[];
+    luckyCharm: { id: string; name: string; value: number }[];
+    clutchFactor: { id: string; name: string; value: number }[];
+    fightingSpirit: { id: string; name: string; value: number }[];
+}
+
+export function getAdvancedStats(data: Schema): AdvancedStats {
+    const stats = data.players.map(player => {
+        const games = data.games.filter(g => g.players.some(p => p.playerId === player.id));
+        const totalGames = games.length;
+
+        let goalsInWins = 0;
+        let goalsInLosses = 0;
+        let totalGoals = 0;
+        let wins = 0;
+
+        games.forEach(g => {
+            const playerPerf = g.players.find(p => p.playerId === player.id);
+            const goals = playerPerf?.goals || 0;
+            totalGoals += goals;
+
+            // Simple score parsing "X-Y" -> Our Score X, Opponent Score Y
+            const parts = g.score?.split('-').map(s => parseInt(s.trim()));
+            if (parts && parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                const [ourScore, theirScore] = parts;
+                if (ourScore > theirScore) {
+                    wins++;
+                    goalsInWins += goals;
+                } else if (ourScore < theirScore) {
+                    goalsInLosses += goals;
+                }
+            }
+        });
+
+        return {
+            id: player.id,
+            name: player.name,
+            totalGames,
+            totalGoals,
+            goalsInWins,
+            goalsInLosses,
+            wins
+        };
+    });
+
+    // 1. Efficiency (Goals/Game, min 3 games)
+    const efficiency = stats
+        .filter(s => s.totalGames >= 3)
+        .map(s => ({ ...s, value: s.totalGoals / s.totalGames }))
+        .sort((a, b) => b.value - a.value);
+
+    // 2. Total Goals
+    const totalGoals = stats
+        .map(s => ({ ...s, value: s.totalGoals }))
+        .sort((a, b) => b.value - a.value);
+
+    // 3. Games Played
+    const gamesPlayed = stats
+        .map(s => ({ ...s, value: s.totalGames }))
+        .sort((a, b) => b.value - a.value);
+
+    // 4. Lucky Charm (Win %)
+    const luckyCharm = stats
+        .filter(s => s.totalGames > 0)
+        .map(s => ({ ...s, value: (s.wins / s.totalGames) * 100 }))
+        .sort((a, b) => b.value - a.value);
+
+    // 5. Clutch Factor (% goals in wins)
+    const clutchFactor = stats
+        .filter(s => s.totalGoals > 0)
+        .map(s => ({ ...s, value: (s.goalsInWins / s.totalGoals) * 100 }))
+        .sort((a, b) => b.value - a.value);
+
+    // 6. Fighting Spirit (% goals in losses)
+    const fightingSpirit = stats
+        .filter(s => s.totalGoals > 0)
+        .map(s => ({ ...s, value: (s.goalsInLosses / s.totalGoals) * 100 }))
+        .sort((a, b) => b.value - a.value);
+
+    return {
+        efficiency,
+        totalGoals,
+        gamesPlayed,
+        luckyCharm,
+        clutchFactor,
+        fightingSpirit
+    };
 }
