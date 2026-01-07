@@ -1,7 +1,7 @@
 
 import { getData, getPlayerStats } from '@/lib/storage';
 import { deletePlayerAction } from '@/app/actions';
-import { ArrowLeft, History, Trophy, Trash2, Wallet } from 'lucide-react';
+import { ArrowLeft, History, Trophy, Trash2, Wallet, BadgeDollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -124,6 +124,38 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                                         <tr key={p.id} className="hover:bg-[hsl(var(--accent)/0.5)]">
                                             <td className="p-4 text-sm">{new Date(p.date).toLocaleDateString()}</td>
                                             <td className="p-4 text-sm font-bold text-right text-[hsl(var(--primary))]">+${p.amount.toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-4">
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <BadgeDollarSign size={20} className="text-[hsl(var(--secondary))]" /> Fees & Charges
+                    </h2>
+                    {stats.history.fees.length === 0 ? (
+                        <div className="glass-card p-8 rounded-xl text-center text-muted text-sm">
+                            No extra fees recorded.
+                        </div>
+                    ) : (
+                        <div className="glass-card rounded-xl overflow-hidden">
+                            <table className="w-full text-left">
+                                <thead className="bg-[hsl(var(--accent))] text-muted-foreground text-xs uppercase tracking-wider">
+                                    <tr>
+                                        <th className="p-4 font-medium">Date</th>
+                                        <th className="p-4 font-medium">Description</th>
+                                        <th className="p-4 font-medium text-right">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[hsl(var(--border))]">
+                                    {stats.history.fees.map(f => (
+                                        <tr key={f.id} className="hover:bg-[hsl(var(--accent)/0.5)]">
+                                            <td className="p-4 text-sm">{new Date(f.date).toLocaleDateString()}</td>
+                                            <td className="p-4 text-sm">{f.description}</td>
+                                            <td className="p-4 text-sm font-bold text-right text-[hsl(var(--destructive))]">-${f.amount.toFixed(2)}</td>
                                         </tr>
                                     ))}
                                 </tbody>

@@ -30,7 +30,19 @@ export async function GET() {
         id UUID PRIMARY KEY,
         player_id UUID REFERENCES players(id),
         amount DECIMAL(10, 2) NOT NULL,
-        date VARCHAR(255) NOT NULL
+        date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        season VARCHAR(20) DEFAULT 'Season 3'
+      );
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS fees (
+        id UUID PRIMARY KEY,
+        player_id UUID REFERENCES players(id),
+        amount DECIMAL(10, 2) NOT NULL,
+        description VARCHAR(255),
+        date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        season VARCHAR(20) DEFAULT 'Season 3'
       );
     `;
 

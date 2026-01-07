@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Trophy, DollarSign, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Trophy, DollarSign, LogOut, Wallet } from 'lucide-react';
 import { logout } from '@/app/actions';
 
 export function Nav() {
@@ -13,6 +13,7 @@ export function Nav() {
         { href: '/players', label: 'Players', icon: Users },
         { href: '/games', label: 'Games', icon: Trophy },
         { href: '/payments', label: 'Payments', icon: DollarSign },
+        { href: '/fees', label: 'Fees', icon: Wallet },
     ];
 
     return (

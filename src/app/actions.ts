@@ -1,6 +1,6 @@
 'use server';
 
-import { addGame, addPayment, addPlayer, getData, deletePlayer, deleteGame, deletePayment } from "@/lib/storage";
+import { addGame, addPayment, addPlayer, addFee, getData, deletePlayer, deleteGame, deletePayment, deleteFee } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -114,4 +114,24 @@ export async function deletePaymentAction(id: string) {
     revalidatePath('/payments');
     revalidatePath('/players');
     redirect('/payments?msg=payment_deleted');
+}
+
+export async function createFee(formData: FormData) {
+    const playerId = formData.get('playerId') as string;
+    const amount = parseFloat(formData.get('amount') as string);
+    const description = formData.get('description') as string;
+    const date = new Date().toISOString();
+    const season = (formData.get('season') as string) || 'Season 3';
+
+    await addFee({ playerId, amount, description, date, season });
+    revalidatePath('/fees');
+    revalidatePath('/players');
+    revalidatePath(`/players/${playerId}`);
+}
+
+export async function deleteFeeAction(id: string) {
+    await deleteFee(id);
+    revalidatePath('/fees');
+    revalidatePath('/players');
+    redirect('/fees?msg=fee_deleted');
 }

@@ -34,16 +34,27 @@ export interface Payment {
     season: string;
 }
 
+export interface Fee {
+    id: string;
+    playerId: string;
+    amount: number;
+    description: string;
+    date: string;
+    season: string;
+}
+
 export interface Schema {
     players: Player[];
     games: Game[];
     payments: Payment[];
+    fees: Fee[];
 }
 
 const defaultData: Schema = {
     players: [],
     games: [],
-    payments: []
+    payments: [],
+    fees: []
 };
 
 // --- Local Storage Implementation ---
@@ -56,10 +67,20 @@ async function ensureFile() {
     }
 }
 
-async function getLocalData(): Promise<Schema> {
-    await ensureFile();
+const getLocalData = async (): Promise<Schema> => {
+    try {
+        await fs.access(DATA_FILE); // Check if file exists
+    } catch {
+        return { players: [], games: [], payments: [], fees: [] }; // If not, return empty schema
+    }
     const rawData = await fs.readFile(DATA_FILE, 'utf-8');
     const data = JSON.parse(rawData);
+
+    // Ensure fees array exists for legacy JSON
+    if (!data.fees) data.fees = [];
+
+    // Ensure fees array exists for legacy JSON
+    if (!data.fees) data.fees = [];
 
     // Migration for legacy data (playerIds -> players)
     if (data.games) {
@@ -92,6 +113,15 @@ async function getDbData(): Promise<Schema> {
             sql`SELECT * FROM game_players`
         ]);
 
+        const players: Player[] = playersRes.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            totalCost: 0, // Calculated later
+            totalPaid: 0, // Calculated later
+            owed: 0,      // Calculated later
+            gamesPlayed: 0 // Calculated later
+        }));
+
         const games: Game[] = gamesRes.rows.map(row => ({
             id: row.id,
             date: row.date,
@@ -115,10 +145,28 @@ async function getDbData(): Promise<Schema> {
             season: row.season || 'Season 3' // Default for legacy rows
         }));
 
+        // Fetch fees (if table exists, otherwise empty)
+        let fees: Fee[] = [];
+        try {
+            const feesRes = await sql`SELECT * FROM fees`;
+            fees = feesRes.rows.map(row => ({
+                id: row.id,
+                playerId: row.player_id,
+                amount: Number(row.amount),
+                description: row.description,
+                date: row.date,
+                season: row.season
+            }));
+        } catch (e) {
+            // Table might not exist yet, or other DB error. Log and proceed with empty fees.
+            console.warn("Could not fetch fees, table might not exist or other error:", e);
+        }
+
         return {
-            players: playersRes.rows as Player[],
+            players,
             games,
-            payments
+            payments,
+            fees
         };
     } catch (e) {
         console.error("DB Error:", e);
@@ -190,8 +238,12 @@ export async function addPayment(payment: Omit<Payment, 'id'>) {
 export function calculatePlayerStats(data: Schema, playerId: string) {
     const playedGames = data.games.filter(g => g.players.some(p => p.playerId === playerId));
     const payments = data.payments.filter(p => p.playerId === playerId);
+    const fees = data.fees.filter(f => f.playerId === playerId);
 
-    const totalCost = playedGames.reduce((sum, g) => sum + g.costPerPlayer, 0);
+    const gameCost = playedGames.reduce((sum, g) => sum + g.costPerPlayer, 0);
+    const feeCost = fees.reduce((sum, f) => sum + f.amount, 0);
+    const totalCost = gameCost + feeCost;
+
     const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
 
     const goalsScored = playedGames.reduce((sum, g) => {
@@ -214,6 +266,13 @@ export function calculatePlayerStats(data: Schema, playerId: string) {
         seasons[s].goalsScored += (playerPerf?.goals || 0);
     });
 
+    // Update seasons from fees
+    fees.forEach(f => {
+        const s = f.season || 'Season 3';
+        if (!seasons[s]) seasons[s] = { gamesPlayed: 0, goalsScored: 0, totalCost: 0, totalPaid: 0, owed: 0 };
+        seasons[s].totalCost += f.amount;
+    });
+
     // Initialize/Update seasons from payments
     payments.forEach(p => {
         const s = p.season || 'Season 3';
@@ -232,10 +291,11 @@ export function calculatePlayerStats(data: Schema, playerId: string) {
         totalCost,
         totalPaid,
         owed: totalCost - totalPaid,
-        seasons, // <--- New Field
+        seasons,
         history: {
             games: playedGames,
-            payments: payments
+            payments: payments,
+            fees: fees
         }
     };
 }
@@ -245,19 +305,35 @@ export async function getPlayerStats(playerId: string) {
     return calculatePlayerStats(data, playerId);
 }
 
+export async function addFee(fee: Omit<Fee, 'id'>) {
+    const id = randomUUID();
+    if (USE_DB) {
+        await sql`INSERT INTO fees (id, player_id, amount, description, date, season) VALUES (${id}, ${fee.playerId}, ${fee.amount}, ${fee.description}, ${fee.date}, ${fee.season})`;
+        return { ...fee, id };
+    } else {
+        const data = await getLocalData();
+        const newFee = { ...fee, id };
+        data.fees.push(newFee);
+        await saveLocalData(data);
+        return newFee;
+    }
+}
+
 export async function deletePlayer(id: string) {
     if (USE_DB) {
-        await sql`DELETE FROM payments WHERE player_id = ${id}`;
         await sql`DELETE FROM game_players WHERE player_id = ${id}`;
+        await sql`DELETE FROM payments WHERE player_id = ${id}`;
+        await sql`DELETE FROM fees WHERE player_id=${id}`;
         await sql`DELETE FROM players WHERE id = ${id}`;
     } else {
         const data = await getLocalData();
         data.players = data.players.filter(p => p.id !== id);
         data.payments = data.payments.filter(p => p.playerId !== id);
-        data.games = data.games.map(g => ({
-            ...g,
-            players: g.players.filter(p => p.playerId !== id)
-        }));
+        data.fees = data.fees.filter(f => f.playerId !== id);
+        // Remove from games
+        data.games.forEach(g => {
+            g.players = g.players.filter(p => p.playerId !== id);
+        });
         await saveLocalData(data);
     }
 }
@@ -279,6 +355,16 @@ export async function deletePayment(id: string) {
     } else {
         const data = await getLocalData();
         data.payments = data.payments.filter(p => p.id !== id);
+        await saveLocalData(data);
+    }
+}
+
+export async function deleteFee(id: string) {
+    if (USE_DB) {
+        await sql`DELETE FROM fees WHERE id=${id}`;
+    } else {
+        const data = await getLocalData();
+        data.fees = data.fees.filter(f => f.id !== id);
         await saveLocalData(data);
     }
 }
