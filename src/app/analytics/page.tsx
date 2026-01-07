@@ -40,7 +40,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                 <h3 className="text-lg font-bold">{title}</h3>
             </div>
 
-            <p className="text-sm text-muted mb-4 h-[40px] leading-tight">{description}</p>
+            <p className="text-lg text-muted mb-4 min-h-[60px] leading-tight">{description}</p>
 
             <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                 {data.map((player: any, index: number) => (
@@ -163,7 +163,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                             <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500"><Users size={24} /></div>
                             <h3 className="text-lg font-bold">The Core</h3>
                         </div>
-                        <p className="text-sm text-muted mb-4">Trios with the most appearances together.</p>
+                        <p className="text-lg text-muted mb-4">Trios with the most appearances together.</p>
                         <div className="space-y-3">
                             {synergy.theCore.map((trio, i) => (
                                 <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
@@ -183,7 +183,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                             <div className="p-2 rounded-lg bg-green-500/10 text-green-500"><Trophy size={24} /></div>
                             <h3 className="text-lg font-bold">Match Winners</h3>
                         </div>
-                        <p className="text-sm text-muted mb-4">Highest Win % (min 3 games).</p>
+                        <p className="text-lg text-muted mb-4">Highest Win % (min 3 games).</p>
                         <div className="space-y-3">
                             {synergy.matchWinners.map((trio, i) => (
                                 <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
@@ -203,7 +203,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                             <div className="p-2 rounded-lg bg-red-500/10 text-red-500"><Shield size={24} /></div>
                             <h3 className="text-lg font-bold">The Wall</h3>
                         </div>
-                        <p className="text-sm text-muted mb-4">Lowest Avg Goals Conceded (min 3 games).</p>
+                        <p className="text-lg text-muted mb-4">Lowest Avg Goals Conceded (min 3 games).</p>
                         <div className="space-y-3">
                             {synergy.theWall.map((trio, i) => (
                                 <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
