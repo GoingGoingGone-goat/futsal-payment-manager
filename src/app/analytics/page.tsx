@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { getAdvancedStats, getData } from '@/lib/storage';
-import { BarChart3, Crown, Flame, Target, Trophy, Zap, Shield } from 'lucide-react';
+import { getAdvancedStats, getData, getSynergyStats } from '@/lib/storage';
+import { BarChart3, Crown, Flame, Target, Trophy, Zap, Shield, Users } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +12,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
     // Sort logic handled in storage, just pass filter
     const stats = getAdvancedStats(data, currentSeason);
+    const synergy = getSynergyStats(data, currentSeason);
 
     const SeasonTab = ({ label, value }: { label: string, value: string }) => {
         const isActive = currentSeason === value;
@@ -149,6 +150,76 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                 />
 
             </div>
+
+            {/* Team Synergy Section */}
+            <div className="mt-12">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <Users className="text-[hsl(var(--primary))]" /> Team Synergy <span className="text-sm font-normal text-muted">(Best Trios)</span>
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* The Core */}
+                    <div className="glass-card p-6 rounded-2xl flex flex-col h-full">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500"><Users size={24} /></div>
+                            <h3 className="text-lg font-bold">The Core</h3>
+                        </div>
+                        <p className="text-xs text-muted mb-4">Trios with the most appearances together.</p>
+                        <div className="space-y-3">
+                            {synergy.theCore.map((trio, i) => (
+                                <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
+                                    <div className="text-sm font-medium">
+                                        {trio.playerNames.join(', ')}
+                                    </div>
+                                    <div className="font-bold text-blue-500">{trio.value} Games</div>
+                                </div>
+                            ))}
+                            {synergy.theCore.length === 0 && <p className="text-muted text-sm">Not enough data.</p>}
+                        </div>
+                    </div>
+
+                    {/* Match Winners */}
+                    <div className="glass-card p-6 rounded-2xl flex flex-col h-full">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 rounded-lg bg-green-500/10 text-green-500"><Trophy size={24} /></div>
+                            <h3 className="text-lg font-bold">Match Winners</h3>
+                        </div>
+                        <p className="text-xs text-muted mb-4">Highest Win % (min 3 games).</p>
+                        <div className="space-y-3">
+                            {synergy.matchWinners.map((trio, i) => (
+                                <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
+                                    <div className="text-sm font-medium">
+                                        {trio.playerNames.join(', ')}
+                                    </div>
+                                    <div className="font-bold text-green-500">{trio.value.toFixed(1)}%</div>
+                                </div>
+                            ))}
+                            {synergy.matchWinners.length === 0 && <p className="text-muted text-sm">Not enough data.</p>}
+                        </div>
+                    </div>
+
+                    {/* The Wall */}
+                    <div className="glass-card p-6 rounded-2xl flex flex-col h-full">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 rounded-lg bg-red-500/10 text-red-500"><Shield size={24} /></div>
+                            <h3 className="text-lg font-bold">The Wall</h3>
+                        </div>
+                        <p className="text-xs text-muted mb-4">Lowest Avg Goals Conceded (min 3 games).</p>
+                        <div className="space-y-3">
+                            {synergy.theWall.map((trio, i) => (
+                                <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
+                                    <div className="text-sm font-medium">
+                                        {trio.playerNames.join(', ')}
+                                    </div>
+                                    <div className="font-bold text-red-500">{trio.value.toFixed(2)}</div>
+                                </div>
+                            ))}
+                            {synergy.theWall.length === 0 && <p className="text-muted text-sm">Not enough data.</p>}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
+        </div >
     );
 }
