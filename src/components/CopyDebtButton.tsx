@@ -14,9 +14,13 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
     const handleCopy = async () => {
         if (!debtors || debtors.length === 0) return;
 
-        // Format: Name $Amount
+        // Format: Name: $Amount
         const text = debtors
-            .map(d => `${d.name} $${d.owed.toFixed(0)}`) // Rounding to nearest dollar as requested (e.g., $5)
+            .map(p => {
+                // Round up to 2 decimal places
+                const roundedOwed = Math.ceil(p.owed * 100) / 100;
+                return `${p.name}: $${roundedOwed.toFixed(2)}`;
+            })
             .join('\n');
 
         try {
