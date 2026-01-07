@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Trophy, DollarSign } from 'lucide-react';
+import { LayoutDashboard, Users, Trophy, DollarSign, LogOut } from 'lucide-react';
+import { logout } from '@/app/actions';
 
 export function Nav() {
     const pathname = usePathname();
@@ -40,6 +41,15 @@ export function Nav() {
                             </Link>
                         );
                     })}
+                </div>
+
+                <div className="hidden md:block mt-auto p-4 md:pb-8 md:px-6">
+                    <form action={logout}>
+                        <button type="submit" className="flex items-center gap-4 text-red-400 hover:text-red-500 hover:bg-red-500/10 p-4 rounded-xl transition-all w-full">
+                            <LogOut size={24} />
+                            <span className="text-xl font-medium">Log Out</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </nav>

@@ -2,6 +2,34 @@
 
 import { addGame, addPayment, addPlayer, getData, deletePlayer, deleteGame, deletePayment } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+export async function login(formData: FormData) {
+    const password = formData.get('password') as string;
+
+    // Simple environment variable check
+    if (password === process.env.ADMIN_PASSWORD) {
+        // Set secure cookie
+        const cookieStore = await cookies(); // await is important in Next.js 15
+        cookieStore.set('auth_session', 'true', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 24 * 7 // 1 week
+        });
+        redirect('/');
+    }
+
+    // If failed, redirect back to login with error param (could be handled better but keeping it simple)
+    redirect('/login?error=true');
+}
+
+export async function logout() {
+    const cookieStore = await cookies();
+    cookieStore.delete('auth_session');
+    redirect('/login');
+}
 
 export async function createPlayer(formData: FormData) {
     const name = formData.get('name') as string;
