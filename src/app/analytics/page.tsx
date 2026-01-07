@@ -31,7 +31,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         );
     };
 
-    const Leaderboard = ({ title, icon: Icon, data, suffix = '', precision = 0, description }: any) => (
+    const Leaderboard = ({ title, icon: Icon, data, suffix = '', precision = 0, description, showSign = false }: any) => (
         <div className="glass-card p-6 rounded-2xl flex flex-col h-full max-h-[500px]">
             <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 rounded-lg bg-[hsl(var(--secondary)/0.1)] text-[hsl(var(--secondary))]">
@@ -58,8 +58,8 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                                 {player.name}
                             </span>
                         </div>
-                        <span className="font-bold tabular-nums shrink-0">
-                            {player.value.toFixed(precision)}{suffix}
+                        <span className={`font-bold tabular-nums shrink-0 ${showSign && player.value > 0 ? 'text-green-500' : showSign && player.value < 0 ? 'text-red-500' : ''}`}>
+                            {showSign && player.value > 0 ? '+' : ''}{player.value.toFixed(precision)}{suffix}
                         </span>
                     </div>
                 ))}
@@ -148,7 +148,33 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                     suffix="%"
                     description="% of goals scored in losing games (min 3 games)."
                 />
+            </div>
 
+            {/* Power Rankings Section */}
+            <div className="mt-12">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <Zap className="text-yellow-500" /> Power Rankings <span className="text-sm font-normal text-muted">(Individual Impact)</span>
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Defensive Rating */}
+                    <Leaderboard
+                        title="The Individual Wall"
+                        icon={Shield}
+                        data={stats.defensiveRating}
+                        precision={2}
+                        description="Defensive Rating: Average goals conceded by the team when this player is on the pitch (Lower is better)."
+                    />
+
+                    {/* Net Rating */}
+                    <Leaderboard
+                        title="The Difference Maker"
+                        icon={Crown}
+                        data={stats.netRating}
+                        precision={2}
+                        showSign={true}
+                        description="Net Rating: Average goal difference when this player is on the pitch (Higher is better)."
+                    />
+                </div>
             </div>
 
             {/* Team Synergy Section */}

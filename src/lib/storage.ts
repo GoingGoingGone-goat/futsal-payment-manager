@@ -421,6 +421,8 @@ export interface AdvancedStats {
     luckyCharm: { id: string; name: string; value: number }[];
     clutchFactor: { id: string; name: string; value: number }[];
     fightingSpirit: { id: string; name: string; value: number }[];
+    defensiveRating: { id: string; name: string; value: number }[];
+    netRating: { id: string; name: string; value: number }[];
 }
 
 export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedStats {
@@ -439,6 +441,10 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
         let totalGoals = 0;
         let wins = 0;
 
+        // New stats for Ratings
+        let teamGoalsFor = 0;
+        let teamGoalsAgainst = 0;
+
         games.forEach(g => {
             const playerPerf = g.players.find(p => p.playerId === player.id);
             const goals = playerPerf?.goals || 0;
@@ -448,6 +454,10 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
             const parts = g.score?.split('-').map(s => parseInt(s.trim()));
             if (parts && parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
                 const [ourScore, theirScore] = parts;
+
+                teamGoalsFor += ourScore;
+                teamGoalsAgainst += theirScore;
+
                 if (ourScore > theirScore) {
                     wins++;
                     goalsInWins += goals;
@@ -464,7 +474,9 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
             totalGoals,
             goalsInWins,
             goalsInLosses,
-            wins
+            wins,
+            teamGoalsFor,
+            teamGoalsAgainst
         };
     });
 
@@ -502,13 +514,27 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
         .map(s => ({ ...s, value: (s.goalsInLosses / s.totalGoals) * 100 }))
         .sort((a, b) => b.value - a.value);
 
+    // 7. Defensive Rating (Avg Goals Conceded, Lower is Better)
+    const defensiveRating = stats
+        .filter(s => s.totalGames >= 3)
+        .map(s => ({ ...s, value: s.teamGoalsAgainst / s.totalGames }))
+        .sort((a, b) => a.value - b.value);
+
+    // 8. Net Rating (Avg Goal Diff, Higher is Better)
+    const netRating = stats
+        .filter(s => s.totalGames >= 3)
+        .map(s => ({ ...s, value: (s.teamGoalsFor - s.teamGoalsAgainst) / s.totalGames }))
+        .sort((a, b) => b.value - a.value);
+
     return {
         efficiency,
         totalGoals,
         gamesPlayed,
         luckyCharm,
         clutchFactor,
-        fightingSpirit
+        fightingSpirit,
+        defensiveRating,
+        netRating
     };
 }
 
