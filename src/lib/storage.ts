@@ -426,7 +426,7 @@ export interface AdvancedStats {
     offensiveRating: { id: string; name: string; value: number }[];
 }
 
-export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedStats {
+export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: number = 3): AdvancedStats {
     const stats = data.players.map(player => {
         // Filter games by season if provided
         const allGames = data.games;
@@ -481,9 +481,9 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
         };
     });
 
-    // 1. Efficiency (Goals/Game, min 3 games)
+    // 1. Efficiency (Goals/Game, min games)
     const efficiency = stats
-        .filter(s => s.totalGames >= 3)
+        .filter(s => s.totalGames >= minGames)
         .map(s => ({ ...s, value: s.totalGoals / s.totalGames }))
         .sort((a, b) => b.value - a.value);
 
@@ -499,37 +499,37 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string): AdvancedS
 
     // 4. Lucky Charm (Win %)
     const luckyCharm = stats
-        .filter(s => s.totalGames >= 3)
+        .filter(s => s.totalGames >= minGames)
         .map(s => ({ ...s, value: (s.wins / s.totalGames) * 100 }))
         .sort((a, b) => b.value - a.value);
 
     // 5. Clutch Factor (% goals in wins)
     const clutchFactor = stats
-        .filter(s => s.totalGoals > 0 && s.totalGames >= 3)
+        .filter(s => s.totalGoals > 0 && s.totalGames >= minGames)
         .map(s => ({ ...s, value: (s.goalsInWins / s.totalGoals) * 100 }))
         .sort((a, b) => b.value - a.value);
 
     // 6. Fighting Spirit (% goals in losses)
     const fightingSpirit = stats
-        .filter(s => s.totalGoals > 0 && s.totalGames >= 3)
+        .filter(s => s.totalGoals > 0 && s.totalGames >= minGames)
         .map(s => ({ ...s, value: (s.goalsInLosses / s.totalGoals) * 100 }))
         .sort((a, b) => b.value - a.value);
 
     // 7. Defensive Rating (Avg Goals Conceded, Lower is Better)
     const defensiveRating = stats
-        .filter(s => s.totalGames >= 3)
+        .filter(s => s.totalGames >= minGames)
         .map(s => ({ ...s, value: s.teamGoalsAgainst / s.totalGames }))
         .sort((a, b) => a.value - b.value);
 
     // 8. Offensive Rating (Avg Goals Scored, Higher is Better)
     const offensiveRating = stats
-        .filter(s => s.totalGames >= 3)
+        .filter(s => s.totalGames >= minGames)
         .map(s => ({ ...s, value: s.teamGoalsFor / s.totalGames }))
         .sort((a, b) => b.value - a.value);
 
     // 9. Net Rating (Avg Goal Diff, Higher is Better)
     const netRating = stats
-        .filter(s => s.totalGames >= 3)
+        .filter(s => s.totalGames >= minGames)
         .map(s => ({ ...s, value: (s.teamGoalsFor - s.teamGoalsAgainst) / s.totalGames }))
         .sort((a, b) => b.value - a.value);
 
@@ -614,7 +614,7 @@ export interface SynergyStats {
     theWall: { playerIds: string[]; playerNames: string[]; value: number; gamesPlayed: number }[];
 }
 
-export function getSynergyStats(data: Schema, seasonFilter?: string): SynergyStats {
+export function getSynergyStats(data: Schema, seasonFilter?: string, minGames: number = 3): SynergyStats {
     const trioStats: Record<string, { playerIds: string[]; games: number; wins: number; goalsConceded: number }> = {};
     const playerMap = new Map<string, string>();
     data.players.forEach(p => playerMap.set(p.id, p.name));
@@ -666,17 +666,17 @@ export function getSynergyStats(data: Schema, seasonFilter?: string): SynergySta
         .slice(0, 5)
         .map(t => ({ playerIds: t.playerIds, playerNames: t.playerNames, value: t.games }));
 
-    // 2. Match Winners (Win %, min 5 games)
+    // 2. Match Winners (Win %, min games)
     const matchWinners = [...allTrios]
-        .filter(t => t.games >= 5)
+        .filter(t => t.games >= minGames)
         .map(t => ({ ...t, value: (t.wins / t.games) * 100 }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 5)
         .map(t => ({ playerIds: t.playerIds, playerNames: t.playerNames, value: t.value, gamesPlayed: t.games }));
 
-    // 3. The Wall (Avg Goals Conceded, min 5 games)
+    // 3. The Wall (Avg Goals Conceded, min games)
     const theWall = [...allTrios]
-        .filter(t => t.games >= 5)
+        .filter(t => t.games >= minGames)
         .map(t => ({ ...t, value: t.goalsConceded / t.games }))
         .sort((a, b) => a.value - b.value) // Lower is better
         .slice(0, 5)

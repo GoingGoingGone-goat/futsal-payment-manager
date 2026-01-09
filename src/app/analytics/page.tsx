@@ -4,21 +4,25 @@ import { BarChart3, Crown, Flame, Target, Trophy, Zap, Shield, Users } from 'luc
 
 export const dynamic = 'force-dynamic';
 
-export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
-    const { season } = await searchParams; // Await searchParams in Next.js 15
+export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ season?: string, minGames?: string }> }) {
+    const { season, minGames } = await searchParams; // Await searchParams in Next.js 15
     const currentSeason = season || 'All';
+    const currentMinGames = minGames ? parseInt(minGames) : 3;
 
     const data = await getData();
 
     // Sort logic handled in storage, just pass filter
-    const stats = getAdvancedStats(data, currentSeason);
-    const synergy = getSynergyStats(data, currentSeason);
+    const stats = getAdvancedStats(data, currentSeason, currentMinGames);
+    const synergy = getSynergyStats(data, currentSeason, currentMinGames);
 
     const SeasonTab = ({ label, value }: { label: string, value: string }) => {
         const isActive = currentSeason === value;
+        const href = value === 'All'
+            ? `/analytics?minGames=${currentMinGames}`
+            : `/analytics?season=${value}&minGames=${currentMinGames}`;
         return (
             <Link
-                href={value === 'All' ? '/analytics' : `/analytics?season=${value}`}
+                href={href}
                 className={`
                     px-4 py-2 rounded-full text-sm font-medium transition-all
                     ${isActive
@@ -27,6 +31,27 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                 `}
             >
                 {label}
+            </Link>
+        );
+    };
+
+    const MinGamesTab = ({ value }: { value: number }) => {
+        const isActive = currentMinGames === value;
+        const href = currentSeason === 'All'
+            ? `/analytics?minGames=${value}`
+            : `/analytics?season=${currentSeason}&minGames=${value}`;
+
+        return (
+            <Link
+                href={href}
+                className={`
+                    w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition-all
+                    ${isActive
+                        ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-[hsl(var(--primary)/0.3)]'
+                        : 'bg-[hsl(var(--accent))] text-muted-foreground hover:bg-[hsl(var(--accent)/0.8)] hover:text-foreground'}
+                `}
+            >
+                {value}{value === 30 ? '+' : ''}
             </Link>
         );
     };
@@ -75,17 +100,28 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Analytics</h1>
-                    <p className="text-muted">Advanced player performance metrics.</p>
+            <header className="flex flex-col gap-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Analytics</h1>
+                        <p className="text-muted">Advanced player performance metrics.</p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        <SeasonTab label="All Time" value="All" />
+                        <SeasonTab label="Season 1" value="Season 1" />
+                        <SeasonTab label="Season 2" value="Season 2" />
+                        <SeasonTab label="Season 3" value="Season 3" />
+                    </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                    <SeasonTab label="All Time" value="All" />
-                    <SeasonTab label="Season 1" value="Season 1" />
-                    <SeasonTab label="Season 2" value="Season 2" />
-                    <SeasonTab label="Season 3" value="Season 3" />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 py-4 border-t border-[hsl(var(--border))]">
+                    <span className="text-sm font-medium text-muted">Min Games:</span>
+                    <div className="flex flex-wrap gap-2">
+                        {[3, 5, 10, 15, 20, 25, 30].map(val => (
+                            <MinGamesTab key={val} value={val} />
+                        ))}
+                    </div>
                 </div>
             </header>
 
@@ -98,7 +134,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                     data={stats.efficiency}
                     precision={2}
                     suffix=" G/G"
-                    description="Average goals scored per game (min. 3 games)."
+                    description={`Average goals scored per game (min. ${currentMinGames} games).`}
                 />
 
                 {/* 2. Total Goals (Volume) */}
@@ -126,7 +162,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                     data={stats.luckyCharm}
                     precision={1}
                     suffix="%"
-                    description="% of games won when this player is playing (min 3 games)."
+                    description={`% of games won when this player is playing (min ${currentMinGames} games).`}
                 />
 
                 {/* 5. Clutch Factor (Goal Win %) */}
@@ -136,7 +172,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                     data={stats.clutchFactor}
                     precision={1}
                     suffix="%"
-                    description="% of goals scored in winning games (min 3 games)."
+                    description={`% of goals scored in winning games (min ${currentMinGames} games).`}
                 />
 
                 {/* 6. Fighting Spirit (Goal Lose %) */}
@@ -146,7 +182,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                     data={stats.fightingSpirit}
                     precision={1}
                     suffix="%"
-                    description="% of goals scored in losing games (min 3 games)."
+                    description={`% of goals scored in losing games (min ${currentMinGames} games).`}
                 />
             </div>
 
@@ -162,7 +198,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                         icon={Target}
                         data={stats.offensiveRating}
                         precision={2}
-                        description="Offensive Rating: Average goals scored by the team when this player is on the pitch (Higher is better)."
+                        description={`Offensive Rating: Average goals scored by the team when this player is on the pitch (Higher is better, min ${currentMinGames} games).`}
                     />
 
                     {/* Defensive Rating */}
@@ -171,7 +207,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                         icon={Shield}
                         data={stats.defensiveRating}
                         precision={2}
-                        description="Defensive Rating: Average goals conceded by the team when this player is on the pitch (Lower is better)."
+                        description={`Defensive Rating: Average goals conceded by the team when this player is on the pitch (Lower is better, min ${currentMinGames} games).`}
                     />
 
                     {/* Net Rating */}
@@ -181,7 +217,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                         data={stats.netRating}
                         precision={2}
                         showSign={true}
-                        description="Net Rating: Average goal difference when this player is on the pitch (Higher is better)."
+                        description={`Net Rating: Average goal difference when this player is on the pitch (Higher is better, min ${currentMinGames} games).`}
                     />
                 </div>
             </div>
@@ -218,7 +254,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                             <div className="p-2 rounded-lg bg-green-500/10 text-green-500"><Trophy size={24} /></div>
                             <h3 className="text-lg font-bold">Match Winners</h3>
                         </div>
-                        <p className="text-lg text-muted mb-4">Highest Win % (min 5 games).</p>
+                        <p className="text-lg text-muted mb-4">Highest Win % (min {currentMinGames} games).</p>
                         <div className="space-y-3">
                             {synergy.matchWinners.map((trio, i) => (
                                 <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
@@ -238,7 +274,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                             <div className="p-2 rounded-lg bg-red-500/10 text-red-500"><Shield size={24} /></div>
                             <h3 className="text-lg font-bold">The Wall</h3>
                         </div>
-                        <p className="text-lg text-muted mb-4">Lowest Avg Goals Conceded (min 5 games).</p>
+                        <p className="text-lg text-muted mb-4">Lowest Avg Goals Conceded (min {currentMinGames} games).</p>
                         <div className="space-y-3">
                             {synergy.theWall.map((trio, i) => (
                                 <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
