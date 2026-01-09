@@ -4,22 +4,23 @@ import { BarChart3, Crown, Flame, Target, Trophy, Zap, Shield, Users } from 'luc
 
 export const dynamic = 'force-dynamic';
 
-export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ season?: string, minGames?: string }> }) {
-    const { season, minGames } = await searchParams; // Await searchParams in Next.js 15
+export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ season?: string, minGames?: string, synergySize?: string }> }) {
+    const { season, minGames, synergySize } = await searchParams; // Await searchParams in Next.js 15
     const currentSeason = season || 'All';
     const currentMinGames = minGames ? parseInt(minGames) : 3;
+    const currentSynergySize = synergySize ? parseInt(synergySize) : 3;
 
     const data = await getData();
 
     // Sort logic handled in storage, just pass filter
     const stats = getAdvancedStats(data, currentSeason, currentMinGames);
-    const synergy = getSynergyStats(data, currentSeason, currentMinGames);
+    const synergy = getSynergyStats(data, currentSeason, currentMinGames, currentSynergySize);
 
     const SeasonTab = ({ label, value }: { label: string, value: string }) => {
         const isActive = currentSeason === value;
         const href = value === 'All'
-            ? `/analytics?minGames=${currentMinGames}`
-            : `/analytics?season=${value}&minGames=${currentMinGames}`;
+            ? `/analytics?minGames=${currentMinGames}&synergySize=${currentSynergySize}`
+            : `/analytics?season=${value}&minGames=${currentMinGames}&synergySize=${currentSynergySize}`;
         return (
             <Link
                 href={href}
@@ -38,8 +39,8 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
     const MinGamesTab = ({ value }: { value: number }) => {
         const isActive = currentMinGames === value;
         const href = currentSeason === 'All'
-            ? `/analytics?minGames=${value}`
-            : `/analytics?season=${currentSeason}&minGames=${value}`;
+            ? `/analytics?minGames=${value}&synergySize=${currentSynergySize}`
+            : `/analytics?season=${currentSeason}&minGames=${value}&synergySize=${currentSynergySize}`;
 
         return (
             <Link
@@ -52,6 +53,27 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                 `}
             >
                 {value}{value === 30 ? '+' : ''}
+            </Link>
+        );
+    };
+
+    const SynergySizeTab = ({ value, label }: { value: number, label: string }) => {
+        const isActive = currentSynergySize === value;
+        const href = currentSeason === 'All'
+            ? `/analytics?minGames=${currentMinGames}&synergySize=${value}`
+            : `/analytics?season=${currentSeason}&minGames=${currentMinGames}&synergySize=${value}`;
+
+        return (
+            <Link
+                href={href}
+                className={`
+                    px-3 py-1 rounded-full text-xs font-bold transition-all border
+                    ${isActive
+                        ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]'
+                        : 'bg-transparent text-muted-foreground border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]'}
+                `}
+            >
+                {label} (x{value})
             </Link>
         );
     };
@@ -224,9 +246,25 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
             {/* Team Synergy Section */}
             <div className="mt-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Users className="text-[hsl(var(--primary))]" /> Team Synergy <span className="text-sm font-normal text-muted">(Best Trios)</span>
-                </h2>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <h2 className="text-2xl font-bold flex items-center gap-3">
+                        <Users className="text-[hsl(var(--primary))]" /> Team Synergy
+                        <span className="text-sm font-normal text-muted">
+                            ({currentSynergySize === 2 ? 'Duos' : currentSynergySize === 3 ? 'Trios' : currentSynergySize === 4 ? 'Quartets' : 'Quintets'})
+                        </span>
+                    </h2>
+
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-muted uppercase tracking-wider">Group Size:</span>
+                        <div className="flex gap-2">
+                            <SynergySizeTab value={2} label="Duos" />
+                            <SynergySizeTab value={3} label="Trios" />
+                            <SynergySizeTab value={4} label="Quartets" />
+                            <SynergySizeTab value={5} label="5s" />
+                        </div>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* The Core */}
                     <div className="glass-card p-6 rounded-2xl flex flex-col h-full">
@@ -234,7 +272,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                             <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500"><Users size={24} /></div>
                             <h3 className="text-lg font-bold">The Core</h3>
                         </div>
-                        <p className="text-lg text-muted mb-4">Trios with the most appearances together.</p>
+                        <p className="text-lg text-muted mb-4">Groups with the most appearances together.</p>
                         <div className="space-y-3">
                             {synergy.theCore.map((trio, i) => (
                                 <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">

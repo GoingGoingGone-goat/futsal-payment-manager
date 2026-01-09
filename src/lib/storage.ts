@@ -614,7 +614,28 @@ export interface SynergyStats {
     theWall: { playerIds: string[]; playerNames: string[]; value: number; gamesPlayed: number }[];
 }
 
-export function getSynergyStats(data: Schema, seasonFilter?: string, minGames: number = 3): SynergyStats {
+// Helper to generate combinations of k elements
+function getCombinations<T>(array: T[], k: number): T[][] {
+    const result: T[][] = [];
+
+    function backtrack(start: number, current: T[]) {
+        if (current.length === k) {
+            result.push([...current]);
+            return;
+        }
+
+        for (let i = start; i < array.length; i++) {
+            current.push(array[i]);
+            backtrack(i + 1, current);
+            current.pop();
+        }
+    }
+
+    backtrack(0, []);
+    return result;
+}
+
+export function getSynergyStats(data: Schema, seasonFilter?: string, minGames: number = 3, groupSize: number = 3): SynergyStats {
     const trioStats: Record<string, { playerIds: string[]; games: number; wins: number; goalsConceded: number }> = {};
     const playerMap = new Map<string, string>();
     data.players.forEach(p => playerMap.set(p.id, p.name));
@@ -628,46 +649,43 @@ export function getSynergyStats(data: Schema, seasonFilter?: string, minGames: n
         // Get all player IDs in this game
         const pIds = game.players.map(p => p.playerId).sort();
 
-        // Generate combinations of 3
-        if (pIds.length >= 3) {
-            for (let i = 0; i < pIds.length - 2; i++) {
-                for (let j = i + 1; j < pIds.length - 1; j++) {
-                    for (let k = j + 1; k < pIds.length; k++) {
-                        const trio = [pIds[i], pIds[j], pIds[k]];
-                        const key = trio.join(',');
+        // Generate combinations found in this game
+        if (pIds.length >= groupSize) {
+            const combinations = getCombinations(pIds, groupSize);
 
-                        if (!trioStats[key]) {
-                            trioStats[key] = { playerIds: trio, games: 0, wins: 0, goalsConceded: 0 };
-                        }
+            combinations.forEach(combo => {
+                const key = combo.join(',');
 
-                        trioStats[key].games++;
-
-                        // Parse Score
-                        const parts = game.score.split('-').map(s => parseInt(s.trim()));
-                        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-                            const [us, them] = parts;
-                            trioStats[key].goalsConceded += them;
-                            if (us > them) trioStats[key].wins++;
-                        }
-                    }
+                if (!trioStats[key]) {
+                    trioStats[key] = { playerIds: combo, games: 0, wins: 0, goalsConceded: 0 };
                 }
-            }
+
+                trioStats[key].games++;
+
+                // Parse Score
+                const parts = game.score.split('-').map(s => parseInt(s.trim()));
+                if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                    const [us, them] = parts;
+                    trioStats[key].goalsConceded += them;
+                    if (us > them) trioStats[key].wins++;
+                }
+            });
         }
     });
 
-    const allTrios = Object.values(trioStats).map(t => ({
+    const allGroups = Object.values(trioStats).map(t => ({
         ...t,
         playerNames: t.playerIds.map(id => playerMap.get(id) || 'Unknown')
     }));
 
     // 1. The Core (Most Games)
-    const theCore = [...allTrios]
+    const theCore = [...allGroups]
         .sort((a, b) => b.games - a.games)
         .slice(0, 5)
         .map(t => ({ playerIds: t.playerIds, playerNames: t.playerNames, value: t.games }));
 
     // 2. Match Winners (Win %, min games)
-    const matchWinners = [...allTrios]
+    const matchWinners = [...allGroups]
         .filter(t => t.games >= minGames)
         .map(t => ({ ...t, value: (t.wins / t.games) * 100 }))
         .sort((a, b) => b.value - a.value)
@@ -675,7 +693,7 @@ export function getSynergyStats(data: Schema, seasonFilter?: string, minGames: n
         .map(t => ({ playerIds: t.playerIds, playerNames: t.playerNames, value: t.value, gamesPlayed: t.games }));
 
     // 3. The Wall (Avg Goals Conceded, min games)
-    const theWall = [...allTrios]
+    const theWall = [...allGroups]
         .filter(t => t.games >= minGames)
         .map(t => ({ ...t, value: t.goalsConceded / t.games }))
         .sort((a, b) => a.value - b.value) // Lower is better
