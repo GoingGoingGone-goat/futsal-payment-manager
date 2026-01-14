@@ -92,7 +92,7 @@ export default async function Home() {
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-semibold flex items-center gap-2">
                             <TrendingUp className="text-[hsl(var(--destructive))]" />
-                            Outstanding Debts
+                            Outstanding Debts <span className="text-sm font-normal text-muted ml-2">(Total: ${totalOwed.toFixed(2)})</span>
                         </h2>
                         <CopyDebtButton debtors={debtors} />
                     </div>
