@@ -39,8 +39,13 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
     const handleCopy = async () => {
         if (!debtors || debtors.length === 0) return;
 
+        const totalOutstanding = debtors.reduce((sum, p) => sum + p.owed, 0);
+
+        // Header
+        let text = `Total Outstanding: $${totalOutstanding.toFixed(2)}\n\n`;
+
         // Format: Name: $Amount, Games Count, (Breakdown)
-        const text = debtors
+        const listText = debtors
             .map(p => {
                 // Round up to 2 decimal places
                 const roundedOwed = Math.ceil(p.owed * 100) / 100;
@@ -103,7 +108,7 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
 
                     // Fees Breakdown
                     if (unpaidFees.length > 0) {
-                        parts.push('Rego/Fees');
+                        parts.push('Rego');
                     }
 
                     // Fallback for misc rounding mismatch if we have debt but no items
@@ -112,13 +117,26 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
                     }
 
                     if (parts.length > 0) {
-                        line += `, ${gameCount} game${gameCount === 1 ? '' : 's'}, (${parts.join(', ')})`;
+                        const gamePartStr = parts.filter(p => p !== 'Rego' && p !== 'Misc/Rounding').join(', ');
+                        const hasRego = unpaidFees.length > 0;
+
+                        let breakdownStr = gamePartStr;
+                        if (hasRego) {
+                            breakdownStr += breakdownStr ? ' + Rego' : 'Rego';
+                        }
+                        if (parts.includes('Misc/Rounding')) {
+                            breakdownStr += breakdownStr ? ' + Misc' : 'Misc';
+                        }
+
+                        line += `, ${gameCount} game${gameCount === 1 ? '' : 's'}, (${breakdownStr})`;
                     }
                 }
 
                 return line;
             })
-            .join('\n');
+            .join(detailed ? '\n\n' : '\n'); // Double newline for detailed view
+
+        text += listText;
 
         try {
             await navigator.clipboard.writeText(text);
