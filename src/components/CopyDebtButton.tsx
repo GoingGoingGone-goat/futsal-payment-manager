@@ -122,7 +122,7 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
 
                         let breakdownStr = gamePartStr;
                         if (hasRego) {
-                            breakdownStr += breakdownStr ? ' + Rego' : 'Rego';
+                            breakdownStr += breakdownStr ? ' + any rego' : 'any rego';
                         }
                         if (parts.includes('Misc/Rounding')) {
                             breakdownStr += breakdownStr ? ' + Misc' : 'Misc';
