@@ -32,9 +32,11 @@ interface Debtor {
     };
 }
 
+type CopyMode = 'simple' | 'summary' | 'detailed';
+
 export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
     const [copied, setCopied] = useState(false);
-    const [detailed, setDetailed] = useState(false);
+    const [mode, setMode] = useState<CopyMode>('simple');
 
     const handleCopy = async () => {
         if (!debtors || debtors.length === 0) return;
@@ -51,7 +53,8 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
                 const roundedOwed = Math.ceil(p.owed * 100) / 100;
                 let line = `${p.name}: $${roundedOwed.toFixed(2)}`;
 
-                if (detailed && p.history) {
+                // Calculate Logic if not simple
+                if (mode !== 'simple' && p.history) {
                     // 1. Filter to Season 3 (Target Scope)
                     const s3Games = p.history.games.filter(g => g.season === 'Season 3' || !g.season);
                     const s3Fees = p.history.fees.filter(f => f.season === 'Season 3' || !f.season);
@@ -104,54 +107,66 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
 
                     const gameCount = unpaidGames.length;
 
-                    // Breakdown string
-                    const parts = [];
+                    // --- Construct String Based on Mode ---
 
-                    // Games Breakdown
-                    if (gameCount > 0) {
-                        const breakdown: Record<number, number> = {};
-                        unpaidGames.forEach(g => {
-                            const count = g.players.length;
-                            breakdown[count] = (breakdown[count] || 0) + 1;
-                        });
-
-                        const gameParts = Object.entries(breakdown)
-                            .map(([count, num]) => `${num} x ${count} person game`);
-                        parts.push(...gameParts);
-                    }
-
-                    // Fees Breakdown
-                    if (unpaidFees.length > 0) {
-                        parts.push('any rego');
-                    }
-
-                    // Fallback for misc rounding mismatch if we have debt but no items
-                    if (parts.length === 0 && roundedOwed > 1) {
-                        parts.push('Misc');
-                    }
-
-                    if (parts.length > 0) {
-                        const gamePartStr = parts.filter(p => p !== 'any rego' && p !== 'Misc').join(', ');
-                        const hasRego = unpaidFees.length > 0;
-
-                        let breakdownStr = gamePartStr;
-                        if (hasRego) {
-                            breakdownStr += breakdownStr ? ' + any rego' : 'any rego';
+                    if (mode === 'summary') {
+                        // Format: Name: $Amount, X Games + any rego
+                        line += `, ${gameCount} game${gameCount === 1 ? '' : 's'}`;
+                        if (unpaidFees.length > 0) {
+                            line += ' + any rego';
                         }
-                        if (parts.includes('Misc') && !hasRego && !gamePartStr) {
-                            breakdownStr = 'Misc'; // Just misc
-                        } else if (parts.includes('Misc')) {
-                            // If we have games/rego AND misc, maybe skip misc to avoid confusion unless it's large?
-                            // User prefers clean "game + rego". Let's omit "Misc" if we have valid explanations found.
+                    } else if (mode === 'detailed') {
+                        // Format: Name: $Amount, X Games, (Breakdown + any rego)
+
+                        const parts = [];
+
+                        // Games Breakdown
+                        if (gameCount > 0) {
+                            const breakdown: Record<number, number> = {};
+                            unpaidGames.forEach(g => {
+                                const count = g.players.length;
+                                breakdown[count] = (breakdown[count] || 0) + 1;
+                            });
+
+                            const gameParts = Object.entries(breakdown)
+                                .map(([count, num]) => `${num} x ${count} person game`);
+                            parts.push(...gameParts);
                         }
 
-                        line += `, ${gameCount} game${gameCount === 1 ? '' : 's'}, (${breakdownStr})`;
+                        // Fees Breakdown Marker (Actual string constuction happens below)
+                        if (unpaidFees.length > 0) {
+                            parts.push('any rego');
+                        }
+
+                        // Fallback for misc
+                        if (parts.length === 0 && roundedOwed > 1) {
+                            parts.push('Misc');
+                        }
+
+                        if (parts.length > 0) {
+                            const gamePartStr = parts.filter(p => p !== 'any rego' && p !== 'Misc').join(', ');
+                            const hasRego = unpaidFees.length > 0;
+
+                            let breakdownStr = gamePartStr;
+                            if (hasRego) {
+                                breakdownStr += breakdownStr ? ' + any rego' : 'any rego';
+                            }
+                            if (parts.includes('Misc') && !hasRego && !gamePartStr) {
+                                breakdownStr = 'Misc';
+                            } else if (parts.includes('Misc') && (hasRego || gamePartStr)) {
+                                // Optional: Add + Misc if desired, user didn't explicitly ask but good for completeness
+                                // For now keeping it clean as per "less detailed" request logic applied to detailed
+                                breakdownStr += ' + Misc';
+                            }
+
+                            line += `, ${gameCount} game${gameCount === 1 ? '' : 's'}, (${breakdownStr})`;
+                        }
                     }
                 }
 
                 return line;
             })
-            .join(detailed ? '\n\n' : '\n'); // Double newline for detailed view
+            .join(mode === 'detailed' ? '\n\n' : '\n'); // Double newline only for detailed
 
         text += listText;
 
@@ -169,14 +184,15 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
     return (
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 mr-2">
-                <input
-                    type="checkbox"
-                    id="detailed-copy"
-                    checked={detailed}
-                    onChange={(e) => setDetailed(e.target.checked)}
-                    className="rounded border-[hsl(var(--border))] bg-[hsl(var(--background))]"
-                />
-                <label htmlFor="detailed-copy" className="text-xs text-muted cursor-pointer">Detailed</label>
+                <select
+                    value={mode}
+                    onChange={(e) => setMode(e.target.value as CopyMode)}
+                    className="h-7 text-xs rounded border-[hsl(var(--border))] bg-[hsl(var(--background))] px-2 focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                >
+                    <option value="simple">Simple</option>
+                    <option value="summary">Summary</option>
+                    <option value="detailed">Detailed</option>
+                </select>
             </div>
             <button
                 onClick={handleCopy}
