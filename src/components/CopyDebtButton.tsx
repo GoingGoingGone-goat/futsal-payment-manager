@@ -59,12 +59,17 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
 
                     const totalPaid = s3Payments.reduce((sum, py) => sum + py.amount, 0);
 
-                    // 2. Sort Costs Chronologically (Oldest -> Newest)
-                    // We assume payments cover the oldest debts first
+                    // 2. Sort Costs: FEES FIRST, then Chronological
+                    // This ensures partial payments cover Rego/Fees before Games, leaving Games as the "Unpaid" items.
                     const allCosts = [
-                        ...s3Games.map(g => ({ type: 'game' as const, amount: g.costPerPlayer, date: g.date, data: g })),
-                        ...s3Fees.map(f => ({ type: 'fee' as const, amount: f.amount, date: f.date, data: f }))
-                    ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                        ...s3Fees.map(f => ({ type: 'fee' as const, amount: f.amount, date: f.date, data: f })),
+                        ...s3Games.map(g => ({ type: 'game' as const, amount: g.costPerPlayer, date: g.date, data: g }))
+                    ].sort((a, b) => {
+                        if (a.type !== b.type) {
+                            return a.type === 'fee' ? -1 : 1; // Fees first
+                        }
+                        return new Date(a.date).getTime() - new Date(b.date).getTime(); // Then chronological
+                    });
 
                     // 3. Pay off items
                     let remainingPayment = totalPaid;
@@ -72,21 +77,30 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
 
                     for (const cost of allCosts) {
                         if (remainingPayment >= cost.amount - 1.0) {
-                            // Fully paid (with $1.00 tolerance for rounding/overpayment weirdness)
                             remainingPayment -= cost.amount;
                         } else {
-                            // Partially paid or Unpaid
-                            if (remainingPayment > 0) {
-                                // Used up the last of the payment
-                                remainingPayment = 0;
-                            }
+                            if (remainingPayment > 0) remainingPayment = 0;
                             unpaidItems.push(cost);
                         }
                     }
 
                     // 4. Group Unpaid Items
-                    const unpaidGames = unpaidItems.filter(i => i.type === 'game').map(i => i.data as Game);
+                    let unpaidGames = unpaidItems.filter(i => i.type === 'game').map(i => i.data as Game);
                     const unpaidFees = unpaidItems.filter(i => i.type === 'fee');
+
+                    // 5. Fallback: Closest Match
+                    // If we have distinct debt but logic says "0 games", maybe it's a single specific game with a weird cost match
+                    if (unpaidGames.length === 0 && roundedOwed > 5 && s3Games.length > 0) {
+                        // Find a game cost that is very close to the owed amount
+                        const closestGame = s3Games.reduce((prev, curr) => {
+                            return (Math.abs(curr.costPerPlayer - roundedOwed) < Math.abs(prev.costPerPlayer - roundedOwed) ? curr : prev);
+                        });
+
+                        // If match is within $1.50, assume it's that game
+                        if (Math.abs(closestGame.costPerPlayer - roundedOwed) < 1.50) {
+                            unpaidGames = [closestGame];
+                        }
+                    }
 
                     const gameCount = unpaidGames.length;
 
@@ -108,24 +122,27 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
 
                     // Fees Breakdown
                     if (unpaidFees.length > 0) {
-                        parts.push('Rego');
+                        parts.push('any rego');
                     }
 
                     // Fallback for misc rounding mismatch if we have debt but no items
                     if (parts.length === 0 && roundedOwed > 1) {
-                        parts.push('Misc/Rounding');
+                        parts.push('Misc');
                     }
 
                     if (parts.length > 0) {
-                        const gamePartStr = parts.filter(p => p !== 'Rego' && p !== 'Misc/Rounding').join(', ');
+                        const gamePartStr = parts.filter(p => p !== 'any rego' && p !== 'Misc').join(', ');
                         const hasRego = unpaidFees.length > 0;
 
                         let breakdownStr = gamePartStr;
                         if (hasRego) {
                             breakdownStr += breakdownStr ? ' + any rego' : 'any rego';
                         }
-                        if (parts.includes('Misc/Rounding')) {
-                            breakdownStr += breakdownStr ? ' + Misc' : 'Misc';
+                        if (parts.includes('Misc') && !hasRego && !gamePartStr) {
+                            breakdownStr = 'Misc'; // Just misc
+                        } else if (parts.includes('Misc')) {
+                            // If we have games/rego AND misc, maybe skip misc to avoid confusion unless it's large?
+                            // User prefers clean "game + rego". Let's omit "Misc" if we have valid explanations found.
                         }
 
                         line += `, ${gameCount} game${gameCount === 1 ? '' : 's'}, (${breakdownStr})`;
