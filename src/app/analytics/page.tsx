@@ -134,6 +134,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                         <SeasonTab label="Season 1" value="Season 1" />
                         <SeasonTab label="Season 2" value="Season 2" />
                         <SeasonTab label="Season 3" value="Season 3" />
+                        <SeasonTab label="Season 4" value="Season 4" />
                     </div>
                 </div>
 

@@ -40,6 +40,7 @@ export default async function EditGamePage({ params }: { params: Promise<{ id: s
                                 <Trophy size={16} /> Season
                             </label>
                             <select name="season" defaultValue={game.season} className="input w-full">
+                                <option value="Season 4">Season 4</option>
                                 <option value="Season 3">Season 3</option>
                                 <option value="Season 2">Season 2</option>
                                 <option value="Season 1">Season 1</option>

@@ -44,7 +44,7 @@ export async function createPayment(formData: FormData) {
     const playerId = formData.get('playerId') as string;
     const amount = parseFloat(formData.get('amount') as string);
     const date = formData.get('date') as string;
-    const season = (formData.get('season') as string) || 'Season 3';
+    const season = (formData.get('season') as string) || 'Season 4';
 
     await addPayment({ playerId, amount, date, season });
     revalidatePath('/');
@@ -55,7 +55,7 @@ export async function createGame(formData: FormData) {
     const opponent = formData.get('opponent') as string;
     const date = formData.get('date') as string;
     const score = formData.get('score') as string;
-    const season = (formData.get('season') as string) || 'Season 3';
+    const season = (formData.get('season') as string) || 'Season 4';
 
     // Cost logic: Defaults to 99, can be overridden if input exists and is valid
     // If user provides "totalCost", we divide by player count.
@@ -121,7 +121,7 @@ export async function createFee(formData: FormData) {
     const amount = parseFloat(formData.get('amount') as string);
     const description = formData.get('description') as string;
     const date = new Date().toISOString();
-    const season = (formData.get('season') as string) || 'Season 3';
+    const season = (formData.get('season') as string) || 'Season 4';
 
     await addFee({ playerId, amount, description, date, season });
     revalidatePath('/fees');

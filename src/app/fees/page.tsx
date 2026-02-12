@@ -48,6 +48,7 @@ export default async function FeesPage() {
                     <div>
                         <label htmlFor="season" className="block text-sm font-medium mb-1 text-muted">Season</label>
                         <select name="season" id="season" className="input bg-[hsl(var(--background))]">
+                            <option value="Season 4">Season 4</option>
                             <option value="Season 3">Season 3</option>
                             <option value="Season 2">Season 2</option>
                             <option value="Season 1">Season 1</option>
