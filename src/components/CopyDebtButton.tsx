@@ -37,6 +37,7 @@ type CopyMode = 'simple' | 'summary' | 'detailed';
 export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
     const [copied, setCopied] = useState(false);
     const [mode, setMode] = useState<CopyMode>('simple');
+    const [selectedSeason, setSelectedSeason] = useState('Season 5');
 
     const handleCopy = async () => {
         if (!debtors || debtors.length === 0) return;
@@ -55,18 +56,18 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
 
                 // Calculate Logic if not simple
                 if (mode !== 'simple' && p.history) {
-                    // 1. Filter to Season 3 (Target Scope)
-                    const s3Games = p.history.games.filter(g => g.season === 'Season 3' || !g.season);
-                    const s3Fees = p.history.fees.filter(f => f.season === 'Season 3' || !f.season);
-                    const s3Payments = p.history.payments?.filter(py => py.season === 'Season 3' || !py.season) || [];
+                    // 1. Filter to target season
+                    const targetGames = p.history.games.filter(g => g.season === selectedSeason || (!g.season && selectedSeason === 'Season 3'));
+                    const targetFees = p.history.fees.filter(f => f.season === selectedSeason || (!f.season && selectedSeason === 'Season 3'));
+                    const targetPayments = p.history.payments?.filter(py => py.season === selectedSeason || (!py.season && selectedSeason === 'Season 3')) || [];
 
-                    const totalPaid = s3Payments.reduce((sum, py) => sum + py.amount, 0);
+                    const totalPaid = targetPayments.reduce((sum, py) => sum + py.amount, 0);
 
                     // 2. Sort Costs: FEES FIRST, then Chronological
                     // This ensures partial payments cover Rego/Fees before Games, leaving Games as the "Unpaid" items.
                     const allCosts = [
-                        ...s3Fees.map(f => ({ type: 'fee' as const, amount: f.amount, date: f.date, data: f })),
-                        ...s3Games.map(g => ({ type: 'game' as const, amount: g.costPerPlayer, date: g.date, data: g }))
+                        ...targetFees.map(f => ({ type: 'fee' as const, amount: f.amount, date: f.date, data: f })),
+                        ...targetGames.map(g => ({ type: 'game' as const, amount: g.costPerPlayer, date: g.date, data: g }))
                     ].sort((a, b) => {
                         if (a.type !== b.type) {
                             return a.type === 'fee' ? -1 : 1; // Fees first
@@ -93,9 +94,9 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
 
                     // 5. Fallback: Closest Match
                     // If we have distinct debt but logic says "0 games", maybe it's a single specific game with a weird cost match
-                    if (unpaidGames.length === 0 && roundedOwed > 5 && s3Games.length > 0) {
+                    if (unpaidGames.length === 0 && roundedOwed > 5 && targetGames.length > 0) {
                         // Find a game cost that is very close to the owed amount
-                        const closestGame = s3Games.reduce((prev, curr) => {
+                        const closestGame = targetGames.reduce((prev, curr) => {
                             return (Math.abs(curr.costPerPlayer - roundedOwed) < Math.abs(prev.costPerPlayer - roundedOwed) ? curr : prev);
                         });
 
@@ -183,6 +184,22 @@ export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
 
     return (
         <div className="flex items-center gap-2">
+            {mode !== 'simple' && (
+                <div className="flex items-center gap-2">
+                    <select
+                        value={selectedSeason}
+                        onChange={(e) => setSelectedSeason(e.target.value)}
+                        className="h-7 text-xs rounded border-[hsl(var(--border))] bg-[hsl(var(--background))] px-2 focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                    >
+                        <option value="Season 6">Season 6</option>
+                        <option value="Season 5">Season 5</option>
+                        <option value="Season 4">Season 4</option>
+                        <option value="Season 3">Season 3</option>
+                        <option value="Season 2">Season 2</option>
+                        <option value="Season 1">Season 1</option>
+                    </select>
+                </div>
+            )}
             <div className="flex items-center gap-2 mr-2">
                 <select
                     value={mode}

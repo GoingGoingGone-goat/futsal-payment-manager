@@ -44,7 +44,9 @@ export default async function PaymentsPage() {
 
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-muted">Season</label>
-                                <select name="season" defaultValue="Season 4" className="input">
+                                <select name="season" defaultValue="Season 5" className="input">
+                                    <option value="Season 6">Season 6</option>
+                                    <option value="Season 5">Season 5</option>
                                     <option value="Season 4">Season 4</option>
                                     <option value="Season 3">Season 3</option>
                                     <option value="Season 2">Season 2</option>

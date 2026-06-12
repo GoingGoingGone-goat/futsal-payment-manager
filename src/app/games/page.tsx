@@ -4,12 +4,22 @@ import { Calendar, PlusCircle, Trash2, User, Pencil } from 'lucide-react';
 import Link from 'next/link';
 
 import { FlashMessage } from '@/components/FlashMessage';
+import SquadSelector from '@/components/SquadSelector';
 
 export const dynamic = 'force-dynamic';
 
 export default async function GamesPage() {
     const data = await getData();
     const sortedGames = [...data.games].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    // Count how many games each player has played and sort them descending
+    const playersWithGamesPlayed = data.players.map(player => {
+        const gamesPlayedCount = data.games.filter(g => g.players.some(p => p.playerId === player.id)).length;
+        return {
+            ...player,
+            gamesPlayedCount
+        };
+    }).sort((a, b) => b.gamesPlayedCount - a.gamesPlayedCount);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -30,7 +40,9 @@ export default async function GamesPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium mb-1 text-muted">Season</label>
-                                    <select name="season" defaultValue="Season 4" className="input">
+                                    <select name="season" defaultValue="Season 5" className="input">
+                                        <option value="Season 6">Season 6</option>
+                                        <option value="Season 5">Season 5</option>
                                         <option value="Season 4">Season 4</option>
                                         <option value="Season 3">Season 3</option>
                                         <option value="Season 2">Season 2</option>
@@ -60,33 +72,7 @@ export default async function GamesPage() {
                                 <p className="text-xs text-muted mt-1">Split evenly amongst players.</p>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium mb-2 text-muted">Squad & Goals</label>
-                                <div className="space-y-2 max-h-80 overflow-y-auto p-2 border border-[hsl(var(--border))] rounded-xl bg-[hsl(var(--background)/0.5)]">
-                                    {data.players.length === 0 ? (
-                                        <p className="text-xs text-muted text-center py-2">No players found. Add players first.</p>
-                                    ) : (
-                                        data.players.map(player => (
-                                            <div key={player.id} className="flex items-center justify-between gap-2 p-2 hover:bg-[hsl(var(--accent))] rounded-lg transition-colors group">
-                                                <label className="flex items-center gap-3 cursor-pointer flex-1">
-                                                    <input type="checkbox" name="players" value={player.id} className="w-4 h-4 rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]" />
-                                                    <span className="text-sm font-medium">{player.name}</span>
-                                                </label>
-                                                <div className="flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                    <span className="text-[10px] uppercase text-muted">Goals:</span>
-                                                    <input
-                                                        type="number"
-                                                        name={`goals-${player.id}`}
-                                                        min="0"
-                                                        placeholder="0"
-                                                        className="w-12 p-1 text-xs rounded bg-[hsl(var(--background))] border border-[hsl(var(--border))] text-center focus:border-[hsl(var(--primary))] outline-none"
-                                                    />
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
+                            <SquadSelector players={playersWithGamesPlayed} />
 
                             <button type="submit" className="btn btn-primary w-full justify-center">Record Game</button>
                         </form>
@@ -115,7 +101,7 @@ export default async function GamesPage() {
                                             ${game.costPerPlayer.toFixed(2)}/player
                                         </span>
                                         <span className="bg-[hsl(var(--secondary)/0.2)] text-[hsl(var(--secondary))] text-xs px-2 py-0.5 rounded font-medium">
-                                            {game.season || 'Season 4'}
+                                            {game.season || 'Season 5'}
                                         </span>
                                     </div>
                                     <h3 className="text-xl font-bold flex items-center gap-3">

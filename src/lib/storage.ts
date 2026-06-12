@@ -209,7 +209,7 @@ export async function addGame(game: Omit<Game, 'id'>) {
         const newGame = {
             ...game,
             id,
-            season: game.season || 'Season 4'
+            season: game.season || 'Season 5'
         };
         data.games.push(newGame);
         await saveLocalData(data);
@@ -227,7 +227,7 @@ export async function addPayment(payment: Omit<Payment, 'id'>) {
         const newPayment = {
             ...payment,
             id,
-            season: payment.season || 'Season 4'
+            season: payment.season || 'Season 5'
         };
         data.payments.push(newPayment);
         await saveLocalData(data);
