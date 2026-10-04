@@ -68,7 +68,18 @@ export async function GET() {
       await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS season VARCHAR(20) DEFAULT 'Season 3';`;
     } catch (e) { /* Ignore */ }
 
-    return NextResponse.json({ message: 'Database seeded successfully' }, { status: 200 });
+    try {
+      await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS goalkeeper_id UUID REFERENCES players(id);`;
+    } catch (e) { /* Ignore */ }
+
+    // Run Goalkeeper Backfill
+    const { ensureGoalkeeperMigration } = await import('@/lib/storage');
+    const migrationResult = await ensureGoalkeeperMigration();
+
+    return NextResponse.json({ 
+      message: 'Database seeded and goalkeepers backfilled successfully', 
+      migration: migrationResult 
+    }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });
   }

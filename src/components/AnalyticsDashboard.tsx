@@ -36,7 +36,7 @@ export default function AnalyticsDashboard({ initialData, availableSeasons }: An
     }: {
         title: string;
         icon: any;
-        data: { id: string; name: string; value: number }[];
+        data: { id: string; name: string; value: number; subValue?: string }[];
         prefix?: string;
         suffix?: string;
         precision?: number;
@@ -65,9 +65,16 @@ export default function AnalyticsDashboard({ initialData, availableSeasons }: An
                             `}>
                                 {index + 1}
                             </span>
-                            <span className="font-medium group-hover:text-[hsl(var(--primary))] transition-colors truncate max-w-[120px]">
-                                {player.name}
-                            </span>
+                            <div className="flex flex-col min-w-0">
+                                <span className="font-medium group-hover:text-[hsl(var(--primary))] transition-colors truncate max-w-[140px]">
+                                    {player.name}
+                                </span>
+                                {player.subValue && (
+                                    <span className="text-[11px] text-muted tabular-nums">
+                                        {player.subValue}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <span className={`font-bold tabular-nums shrink-0 ${showSign && player.value > 0 ? 'text-green-500' : showSign && player.value < 0 ? 'text-red-500' : ''}`}>
                             {showSign && player.value > 0 ? '+' : ''}{prefix}{player.value.toFixed(precision)}{suffix}
@@ -204,6 +211,44 @@ export default function AnalyticsDashboard({ initialData, availableSeasons }: An
                     suffix="%"
                     description={`% of goals scored in losing games (min ${currentMinGames} games).`}
                 />
+            </div>
+
+            {/* Goalkeeper Analytics Section */}
+            <div className="mt-12">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <Shield className="text-yellow-500" /> Goalkeepers <span className="text-sm font-normal text-muted">(Between the Sticks)</span>
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* 1. Goalkeeper Appearances */}
+                    <Leaderboard
+                        title="GK Appearances"
+                        icon={Shield}
+                        data={stats.gkAppearances}
+                        precision={0}
+                        suffix=" games"
+                        description="Total matches played as goalkeeper."
+                    />
+
+                    {/* 2. Goalkeeper Win % */}
+                    <Leaderboard
+                        title="GK Win %"
+                        icon={Crown}
+                        data={stats.gkWinPct}
+                        precision={1}
+                        suffix="%"
+                        description="Win percentage when starting in goal (shows win % and appearances)."
+                    />
+
+                    {/* 3. Goalkeeper Defensive Ranking */}
+                    <Leaderboard
+                        title="GK Goals Conceded / Game"
+                        icon={Target}
+                        data={stats.gkGoalsConcededPerGame}
+                        precision={2}
+                        suffix=" G/G"
+                        description="Average goals conceded per game as goalkeeper (Lower is better)."
+                    />
+                </div>
             </div>
 
             {/* Power Rankings Section */}

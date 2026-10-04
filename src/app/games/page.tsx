@@ -122,15 +122,19 @@ export default async function GamesPage() {
                                 <div className="flex -space-x-2 overflow-hidden">
                                     {game.players.slice(0, 5).map(perf => {
                                         const p = data.players.find(pl => pl.id === perf.playerId);
+                                        const isGk = perf.playerId === game.goalkeeperId;
                                         return p ? (
                                             <Link
                                                 key={perf.playerId}
                                                 href={`/players/${p.id}`}
                                                 prefetch={true}
-                                                title={`View ${p.name}'s profile (${perf.goals} ${perf.goals === 1 ? 'goal' : 'goals'})`}
-                                                className="relative h-8 w-8 rounded-full ring-2 ring-[hsl(var(--card))] bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white group hover:scale-110 hover:z-10 transition-transform cursor-pointer"
+                                                title={`View ${p.name}'s profile (${isGk ? 'GK, ' : ''}${perf.goals} ${perf.goals === 1 ? 'goal' : 'goals'})`}
+                                                className={`relative h-8 w-8 rounded-full ring-2 ${isGk ? 'ring-yellow-500/80 bg-gradient-to-br from-amber-700/60 to-slate-800' : 'ring-[hsl(var(--card))] bg-gradient-to-br from-slate-600 to-slate-700'} flex items-center justify-center text-xs font-bold text-white group hover:scale-110 hover:z-10 transition-transform cursor-pointer`}
                                             >
                                                 {p.name.charAt(0)}
+                                                {isGk && (
+                                                    <span className="absolute -bottom-1 -left-1 text-[10px] leading-none" title="Goalkeeper">🧤</span>
+                                                )}
                                                 {perf.goals > 0 && (
                                                     <span className="absolute -top-1 -right-1 h-3 w-3 bg-[hsl(var(--primary))] rounded-full border border-[hsl(var(--card))]"></span>
                                                 )}

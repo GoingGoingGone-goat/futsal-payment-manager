@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, Target, Filter } from 'lucide-react';
+import { Users, Target, Filter, Shield } from 'lucide-react';
 
 interface Player {
     id: string;
@@ -13,12 +13,16 @@ export default function SquadSelector({ players }: { players: Player[] }) {
     const [checkedIds, setCheckedIds] = useState<string[]>([]);
     const [goals, setGoals] = useState<Record<string, string>>({});
     const [filterSelected, setFilterSelected] = useState(false);
+    const [selectedGk, setSelectedGk] = useState<string>('');
 
     const handleCheckboxChange = (playerId: string, checked: boolean) => {
         if (checked) {
             setCheckedIds(prev => [...prev, playerId]);
         } else {
             setCheckedIds(prev => prev.filter(id => id !== playerId));
+            if (selectedGk === playerId) {
+                setSelectedGk('');
+            }
             // Reset goals for unchecked players
             setGoals(prev => {
                 const updated = { ...prev };
@@ -135,6 +139,41 @@ export default function SquadSelector({ players }: { players: Player[] }) {
                             </div>
                         );
                     })
+                )}
+            </div>
+
+            {/* Required Goalkeeper Selection */}
+            <div className="pt-3 border-t border-[hsl(var(--border))] space-y-1.5">
+                <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
+                        <Shield size={14} className="text-yellow-500" /> Goalkeeper <span className="text-red-500">*</span>
+                    </label>
+                    {selectedGk && (
+                        <span className="text-[11px] text-yellow-500 font-semibold">
+                            ✓ Designated GK
+                        </span>
+                    )}
+                </div>
+
+                <select
+                    name="goalkeeperId"
+                    required
+                    value={selectedGk}
+                    onChange={(e) => setSelectedGk(e.target.value)}
+                    disabled={checkedIds.length === 0}
+                    className="input w-full text-sm font-semibold"
+                >
+                    <option value="" disabled>
+                        {checkedIds.length === 0 ? 'Select players in the squad above first' : '-- Select Goalkeeper from Lineup --'}
+                    </option>
+                    {players.filter(p => checkedIds.includes(p.id)).map(p => (
+                        <option key={p.id} value={p.id}>
+                            🧤 {p.name}
+                        </option>
+                    ))}
+                </select>
+                {checkedIds.length > 0 && !selectedGk && (
+                    <p className="text-[11px] text-yellow-500/80">Please designate who played in goal for this match.</p>
                 )}
             </div>
         </div>

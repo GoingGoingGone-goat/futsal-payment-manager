@@ -56,6 +56,7 @@ export async function createGame(formData: FormData) {
     const date = formData.get('date') as string;
     const score = formData.get('score') as string;
     const season = (formData.get('season') as string) || 'Season 6';
+    const goalkeeperId = (formData.get('goalkeeperId') as string) || '';
 
     // Cost logic: Defaults to 99, can be overridden if input exists and is valid
     // If user provides "totalCost", we divide by player count.
@@ -67,6 +68,10 @@ export async function createGame(formData: FormData) {
 
     if (playerIds.length === 0) {
         return; // Validation should happen closely to UI, but good safety
+    }
+
+    if (!goalkeeperId || !playerIds.includes(goalkeeperId)) {
+        throw new Error('A goalkeeper from the squad lineup must be selected.');
     }
 
     const costPerPlayer = totalCost / playerIds.length;
@@ -85,11 +90,13 @@ export async function createGame(formData: FormData) {
         score,
         costPerPlayer,
         players,
-        season
+        season,
+        goalkeeperId
     });
 
     revalidatePath('/');
     revalidatePath('/games');
+    revalidatePath('/analytics');
     revalidatePath(`/teams/${opponent}`); // Revalidate the opponent history page if it exists
 }
 
@@ -156,6 +163,7 @@ export async function editGame(formData: FormData) {
     const scoreMy = formData.get('scoreMy') as string;
     const scoreTheir = formData.get('scoreTheir') as string;
     const season = formData.get('season') as string;
+    const goalkeeperId = (formData.get('goalkeeperId') as string) || undefined;
 
     if (!id || !date || !opponent) return;
 
@@ -165,10 +173,12 @@ export async function editGame(formData: FormData) {
         date,
         opponent,
         score,
-        season
+        season,
+        goalkeeperId
     });
 
     revalidatePath('/games');
+    revalidatePath('/analytics');
     revalidatePath(`/games/${id}`);
     redirect('/games?msg=updated');
 }

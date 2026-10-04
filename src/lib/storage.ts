@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 import { sql } from '@vercel/postgres';
+import { findHistoricalKeeperId } from './goalkeeperMigration';
 
 const DATA_FILE = path.join(process.cwd(), 'data.json');
 const USE_DB = !!process.env.POSTGRES_URL || !!process.env.DATABASE_URL;
@@ -24,6 +25,7 @@ export interface Game {
     players: PlayerPerformance[];
     costPerPlayer: number;
     season: string;
+    goalkeeperId?: string;
 }
 
 export interface Payment {
@@ -129,6 +131,7 @@ async function getDbData(): Promise<Schema> {
             score: row.score,
             costPerPlayer: Number(row.cost_per_player),
             season: row.season || 'Season 3', // Default for legacy rows
+            goalkeeperId: row.goalkeeper_id || undefined,
             players: gamePlayersRes.rows
                 .filter(gp => gp.game_id === row.id)
                 .map(gp => ({
@@ -185,10 +188,68 @@ export function invalidateDataCache(): void {
     lastCacheTime = 0;
 }
 
+let goalkeeperMigrationDone = false;
+
+export async function ensureGoalkeeperMigration(): Promise<{ backfilled: number; total: number }> {
+    if (goalkeeperMigrationDone) return { backfilled: 0, total: 0 };
+    try {
+        if (USE_DB) {
+            try {
+                await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS goalkeeper_id UUID REFERENCES players(id);`;
+            } catch (e) {
+                console.warn("Could not alter games table for goalkeeper_id:", e);
+            }
+
+            const [unbackedRes, playersRes] = await Promise.all([
+                sql`SELECT id, date, season FROM games WHERE goalkeeper_id IS NULL`,
+                sql`SELECT id, name FROM players`
+            ]);
+
+            const players = playersRes.rows as { id: string; name: string }[];
+            let backfilled = 0;
+
+            for (const row of unbackedRes.rows) {
+                const keeperId = findHistoricalKeeperId(row.season, row.date, players);
+                if (keeperId) {
+                    await sql`UPDATE games SET goalkeeper_id = ${keeperId} WHERE id = ${row.id};`;
+                    backfilled++;
+                }
+            }
+
+            goalkeeperMigrationDone = true;
+            return { backfilled, total: unbackedRes.rows.length };
+        } else {
+            const data = await getLocalData();
+            let backfilled = 0;
+            for (const g of data.games) {
+                if (!g.goalkeeperId) {
+                    const keeperId = findHistoricalKeeperId(g.season, g.date, data.players);
+                    if (keeperId) {
+                        g.goalkeeperId = keeperId;
+                        backfilled++;
+                    }
+                }
+            }
+            if (backfilled > 0) {
+                await saveLocalData(data);
+            }
+            goalkeeperMigrationDone = true;
+            return { backfilled, total: data.games.length };
+        }
+    } catch (e) {
+        console.error("Goalkeeper migration check error:", e);
+        return { backfilled: 0, total: 0 };
+    }
+}
+
 export async function getData(bypassCache: boolean = false): Promise<Schema> {
     const now = Date.now();
     if (!bypassCache && cachedData && (now - lastCacheTime < CACHE_TTL_MS)) {
         return cachedData;
+    }
+
+    if (!goalkeeperMigrationDone) {
+        await ensureGoalkeeperMigration();
     }
 
     const data = USE_DB ? await getDbData() : await getLocalData();
@@ -221,11 +282,12 @@ export async function addGame(game: Omit<Game, 'id'>) {
     const newGame: Game = {
         ...game,
         id,
-        season: game.season || 'Season 6'
+        season: game.season || 'Season 6',
+        goalkeeperId: game.goalkeeperId
     };
 
     if (USE_DB) {
-        await sql`INSERT INTO games (id, date, opponent, score, cost_per_player, season) VALUES (${id}, ${newGame.date}, ${newGame.opponent}, ${newGame.score}, ${newGame.costPerPlayer}, ${newGame.season})`;
+        await sql`INSERT INTO games (id, date, opponent, score, cost_per_player, season, goalkeeper_id) VALUES (${id}, ${newGame.date}, ${newGame.opponent}, ${newGame.score}, ${newGame.costPerPlayer}, ${newGame.season}, ${newGame.goalkeeperId || null})`;
 
         if (newGame.players && newGame.players.length > 0) {
             await Promise.all(
@@ -466,6 +528,7 @@ export async function updateGame(id: string, gameData: Partial<Game>) {
         if (gameData.opponent) await sql`UPDATE games SET opponent = ${gameData.opponent} WHERE id = ${id}`;
         if (gameData.score) await sql`UPDATE games SET score = ${gameData.score} WHERE id = ${id}`;
         if (gameData.season) await sql`UPDATE games SET season = ${gameData.season} WHERE id = ${id}`;
+        if (gameData.goalkeeperId !== undefined) await sql`UPDATE games SET goalkeeper_id = ${gameData.goalkeeperId || null} WHERE id = ${id}`;
 
         // Note: Editing actual players/goals in a game is complex and skipped for now in this function
         // unless we want to do a full delete/re-insert of game_players which is safer but heavier.
@@ -477,6 +540,7 @@ export async function updateGame(id: string, gameData: Partial<Game>) {
             if (gameData.opponent) game.opponent = gameData.opponent;
             if (gameData.score) game.score = gameData.score;
             if (gameData.season) game.season = gameData.season;
+            if (gameData.goalkeeperId !== undefined) game.goalkeeperId = gameData.goalkeeperId;
             await saveLocalData(data);
         }
     }
@@ -488,6 +552,7 @@ export async function updateGame(id: string, gameData: Partial<Game>) {
             if (gameData.opponent) game.opponent = gameData.opponent;
             if (gameData.score) game.score = gameData.score;
             if (gameData.season) game.season = gameData.season;
+            if (gameData.goalkeeperId !== undefined) game.goalkeeperId = gameData.goalkeeperId;
         }
         lastCacheTime = Date.now();
     }
@@ -496,6 +561,14 @@ export async function updateGame(id: string, gameData: Partial<Game>) {
 }
 
 // --- Advanced Analytics ---
+
+export interface GoalkeeperStatItem {
+    id: string;
+    name: string;
+    value: number;
+    gamesAsGk: number;
+    subValue?: string;
+}
 
 export interface AdvancedStats {
     efficiency: { id: string; name: string; value: number }[];
@@ -508,16 +581,18 @@ export interface AdvancedStats {
     netRating: { id: string; name: string; value: number }[];
     offensiveRating: { id: string; name: string; value: number }[];
     moneyPerGame: { id: string; name: string; value: number }[];
+    gkAppearances: GoalkeeperStatItem[];
+    gkWinPct: GoalkeeperStatItem[];
+    gkGoalsConcededPerGame: GoalkeeperStatItem[];
 }
 
 export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: number = 3): AdvancedStats {
-    const stats = data.players.map(player => {
-        // Filter games by season if provided
-        const allGames = data.games;
-        const relevantGames = (seasonFilter && seasonFilter !== 'All')
-            ? allGames.filter(g => g.season === seasonFilter)
-            : allGames;
+    // Filter games by season if provided
+    const relevantGames = (seasonFilter && seasonFilter !== 'All')
+        ? data.games.filter(g => g.season === seasonFilter)
+        : data.games;
 
+    const stats = data.players.map(player => {
         const games = relevantGames.filter(g => g.players.some(p => p.playerId === player.id));
         const totalGames = games.length;
 
@@ -662,6 +737,83 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: 
         .sort((a, b) => b.value - a.value)
         .map(({ id, name, value }) => ({ id, name, value }));
 
+    // 11. Goalkeeper Analytics (calculated dynamically from match records)
+    const gkMap = new Map<string, {
+        id: string;
+        name: string;
+        gamesAsGk: number;
+        winsAsGk: number;
+        goalsConceded: number;
+    }>();
+
+    data.players.forEach(p => {
+        gkMap.set(p.id, {
+            id: p.id,
+            name: p.name,
+            gamesAsGk: 0,
+            winsAsGk: 0,
+            goalsConceded: 0
+        });
+    });
+
+    relevantGames.forEach(g => {
+        if (!g.goalkeeperId) return;
+        const entry = gkMap.get(g.goalkeeperId);
+        if (!entry) return;
+
+        entry.gamesAsGk++;
+
+        const parts = g.score?.split('-').map(s => parseInt(s.trim()));
+        if (parts && parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            const [ourScore, theirScore] = parts;
+            entry.goalsConceded += theirScore;
+            if (ourScore > theirScore) {
+                entry.winsAsGk++;
+            }
+        }
+    });
+
+    const activeGks = Array.from(gkMap.values()).filter(g => g.gamesAsGk > 0);
+
+    // 1. Goalkeeper Appearances
+    const gkAppearances: GoalkeeperStatItem[] = [...activeGks]
+        .map(g => ({
+            id: g.id,
+            name: g.name,
+            value: g.gamesAsGk,
+            gamesAsGk: g.gamesAsGk,
+            subValue: `${g.gamesAsGk} ${g.gamesAsGk === 1 ? 'appearance' : 'appearances'}`
+        }))
+        .sort((a, b) => b.value - a.value);
+
+    // 2. Goalkeeper Win % (Shows win % and number of games)
+    const gkWinPct: GoalkeeperStatItem[] = [...activeGks]
+        .map(g => ({
+            id: g.id,
+            name: g.name,
+            value: g.gamesAsGk > 0 ? (g.winsAsGk / g.gamesAsGk) * 100 : 0,
+            gamesAsGk: g.gamesAsGk,
+            subValue: `${g.gamesAsGk} ${g.gamesAsGk === 1 ? 'game' : 'games'}`
+        }))
+        .sort((a, b) => {
+            if (b.value !== a.value) return b.value - a.value;
+            return b.gamesAsGk - a.gamesAsGk;
+        });
+
+    // 3. Goalkeeper Defensive Ranking (Goals conceded per game, lower is better)
+    const gkGoalsConcededPerGame: GoalkeeperStatItem[] = [...activeGks]
+        .map(g => ({
+            id: g.id,
+            name: g.name,
+            value: g.gamesAsGk > 0 ? g.goalsConceded / g.gamesAsGk : 0,
+            gamesAsGk: g.gamesAsGk,
+            subValue: `${g.gamesAsGk} ${g.gamesAsGk === 1 ? 'game' : 'games'}`
+        }))
+        .sort((a, b) => {
+            if (a.value !== b.value) return a.value - b.value;
+            return b.gamesAsGk - a.gamesAsGk;
+        });
+
     return {
         efficiency,
         totalGoals,
@@ -672,7 +824,10 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: 
         defensiveRating,
         offensiveRating,
         netRating,
-        moneyPerGame
+        moneyPerGame,
+        gkAppearances,
+        gkWinPct,
+        gkGoalsConcededPerGame
     };
 }
 

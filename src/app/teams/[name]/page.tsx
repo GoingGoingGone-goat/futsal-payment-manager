@@ -245,17 +245,24 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
                                     {game.players.map(perf => {
                                         const p = data.players.find(pl => pl.id === perf.playerId);
                                         if (!p) return null;
+                                        const isGk = perf.playerId === game.goalkeeperId;
                                         return (
                                             <Link
                                                 key={perf.playerId}
                                                 href={`/players/${p.id}`}
                                                 prefetch={true}
-                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border hover:scale-105 transition-all cursor-pointer ${perf.goals > 0
-                                                    ? 'bg-[hsl(var(--primary)/0.15)] border-[hsl(var(--primary)/0.3)] text-[hsl(var(--primary))] hover:border-[hsl(var(--primary)/0.6)]'
-                                                    : 'bg-[hsl(var(--background)/0.5)] border-[hsl(var(--border))] text-muted-foreground hover:border-[hsl(var(--primary)/0.4)] hover:text-foreground'
+                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border hover:scale-105 transition-all cursor-pointer ${
+                                                    isGk
+                                                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:border-amber-500/60'
+                                                        : perf.goals > 0
+                                                        ? 'bg-[hsl(var(--primary)/0.15)] border-[hsl(var(--primary)/0.3)] text-[hsl(var(--primary))] hover:border-[hsl(var(--primary)/0.6)]'
+                                                        : 'bg-[hsl(var(--background)/0.5)] border-[hsl(var(--border))] text-muted-foreground hover:border-[hsl(var(--primary)/0.4)] hover:text-foreground'
                                                 }`}
                                             >
-                                                <span className="text-sm font-medium">{p.name}</span>
+                                                <span className="text-sm font-medium flex items-center gap-1">
+                                                    {isGk && <span title="Goalkeeper">🧤</span>}
+                                                    {p.name}
+                                                </span>
                                                 {perf.goals > 0 && (
                                                     <span className="text-xs font-bold bg-[hsl(var(--primary))] text-white px-1.5 rounded-md">
                                                         {perf.goals}

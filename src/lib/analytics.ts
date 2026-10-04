@@ -1,5 +1,13 @@
 import type { Schema } from './storage';
 
+export interface GoalkeeperStatItem {
+    id: string;
+    name: string;
+    value: number;
+    gamesAsGk: number;
+    subValue?: string;
+}
+
 export interface AdvancedStats {
     efficiency: { id: string; name: string; value: number }[];
     totalGoals: { id: string; name: string; value: number }[];
@@ -11,16 +19,18 @@ export interface AdvancedStats {
     netRating: { id: string; name: string; value: number }[];
     offensiveRating: { id: string; name: string; value: number }[];
     moneyPerGame: { id: string; name: string; value: number }[];
+    gkAppearances: GoalkeeperStatItem[];
+    gkWinPct: GoalkeeperStatItem[];
+    gkGoalsConcededPerGame: GoalkeeperStatItem[];
 }
 
 export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: number = 3): AdvancedStats {
-    const stats = data.players.map(player => {
-        // Filter games by season if provided
-        const allGames = data.games;
-        const relevantGames = (seasonFilter && seasonFilter !== 'All')
-            ? allGames.filter(g => g.season === seasonFilter)
-            : allGames;
+    // Filter games by season if provided
+    const relevantGames = (seasonFilter && seasonFilter !== 'All')
+        ? data.games.filter(g => g.season === seasonFilter)
+        : data.games;
 
+    const stats = data.players.map(player => {
         const games = relevantGames.filter(g => g.players.some(p => p.playerId === player.id));
         const totalGames = games.length;
 
@@ -165,6 +175,83 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: 
         .sort((a, b) => b.value - a.value)
         .map(({ id, name, value }) => ({ id, name, value }));
 
+    // 11. Goalkeeper Analytics (calculated dynamically from match records)
+    const gkMap = new Map<string, {
+        id: string;
+        name: string;
+        gamesAsGk: number;
+        winsAsGk: number;
+        goalsConceded: number;
+    }>();
+
+    data.players.forEach(p => {
+        gkMap.set(p.id, {
+            id: p.id,
+            name: p.name,
+            gamesAsGk: 0,
+            winsAsGk: 0,
+            goalsConceded: 0
+        });
+    });
+
+    relevantGames.forEach(g => {
+        if (!g.goalkeeperId) return;
+        const entry = gkMap.get(g.goalkeeperId);
+        if (!entry) return;
+
+        entry.gamesAsGk++;
+
+        const parts = g.score?.split('-').map(s => parseInt(s.trim()));
+        if (parts && parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            const [ourScore, theirScore] = parts;
+            entry.goalsConceded += theirScore;
+            if (ourScore > theirScore) {
+                entry.winsAsGk++;
+            }
+        }
+    });
+
+    const activeGks = Array.from(gkMap.values()).filter(g => g.gamesAsGk > 0);
+
+    // 1. Goalkeeper Appearances
+    const gkAppearances: GoalkeeperStatItem[] = [...activeGks]
+        .map(g => ({
+            id: g.id,
+            name: g.name,
+            value: g.gamesAsGk,
+            gamesAsGk: g.gamesAsGk,
+            subValue: `${g.gamesAsGk} ${g.gamesAsGk === 1 ? 'appearance' : 'appearances'}`
+        }))
+        .sort((a, b) => b.value - a.value);
+
+    // 2. Goalkeeper Win % (Shows win % and number of games)
+    const gkWinPct: GoalkeeperStatItem[] = [...activeGks]
+        .map(g => ({
+            id: g.id,
+            name: g.name,
+            value: g.gamesAsGk > 0 ? (g.winsAsGk / g.gamesAsGk) * 100 : 0,
+            gamesAsGk: g.gamesAsGk,
+            subValue: `${g.gamesAsGk} ${g.gamesAsGk === 1 ? 'game' : 'games'}`
+        }))
+        .sort((a, b) => {
+            if (b.value !== a.value) return b.value - a.value;
+            return b.gamesAsGk - a.gamesAsGk;
+        });
+
+    // 3. Goalkeeper Defensive Ranking (Goals conceded per game, lower is better)
+    const gkGoalsConcededPerGame: GoalkeeperStatItem[] = [...activeGks]
+        .map(g => ({
+            id: g.id,
+            name: g.name,
+            value: g.gamesAsGk > 0 ? g.goalsConceded / g.gamesAsGk : 0,
+            gamesAsGk: g.gamesAsGk,
+            subValue: `${g.gamesAsGk} ${g.gamesAsGk === 1 ? 'game' : 'games'}`
+        }))
+        .sort((a, b) => {
+            if (a.value !== b.value) return a.value - b.value;
+            return b.gamesAsGk - a.gamesAsGk;
+        });
+
     return {
         efficiency,
         totalGoals,
@@ -175,7 +262,10 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: 
         defensiveRating,
         offensiveRating,
         netRating,
-        moneyPerGame
+        moneyPerGame,
+        gkAppearances,
+        gkWinPct,
+        gkGoalsConcededPerGame
     };
 }
 

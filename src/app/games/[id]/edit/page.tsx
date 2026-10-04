@@ -1,7 +1,7 @@
 
 import { getData } from '@/lib/storage';
 import { editGame } from '@/app/actions';
-import { ArrowLeft, Save, Trash2, Calendar, Trophy, Users } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Calendar, Trophy, Users, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SubmitButton } from '@/components/SubmitButton';
@@ -98,6 +98,28 @@ export default async function EditGamePage({ params }: { params: Promise<{ id: s
                                 className="input w-24 text-center text-2xl font-bold text-[hsl(var(--destructive))]"
                             />
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted flex items-center gap-2">
+                            <Shield size={16} className="text-yellow-500" /> Goalkeeper <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            required
+                            name="goalkeeperId"
+                            defaultValue={game.goalkeeperId || ''}
+                            className="input w-full font-semibold"
+                        >
+                            <option value="" disabled>-- Select Goalkeeper from Lineup --</option>
+                            {game.players.map(gp => {
+                                const player = data.players.find(p => p.id === gp.playerId);
+                                return (
+                                    <option key={gp.playerId} value={gp.playerId}>
+                                        🧤 {player ? player.name : 'Unknown Player'}
+                                    </option>
+                                );
+                            })}
+                        </select>
                     </div>
 
                     <div className="pt-6 border-t border-[hsl(var(--border))] flex justify-end gap-3">
