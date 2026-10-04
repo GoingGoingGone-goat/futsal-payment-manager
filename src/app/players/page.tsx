@@ -2,8 +2,8 @@ import { getData, calculatePlayerStats } from '@/lib/storage';
 import { createPlayer } from '@/app/actions';
 import { UserPlus, Wallet } from 'lucide-react';
 import Link from 'next/link';
-
 import { FlashMessage } from '@/components/FlashMessage';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +34,7 @@ export default async function PlayersPage() {
                         <label htmlFor="name" className="block text-sm font-medium mb-1 text-muted">Player Name</label>
                         <input required name="name" id="name" type="text" placeholder="e.g. John Doe" className="input" />
                     </div>
-                    <button type="submit" className="btn btn-primary">Add Player</button>
+                    <SubmitButton pendingText="Adding..." className="btn btn-primary">Add Player</SubmitButton>
                 </form>
             </div>
 

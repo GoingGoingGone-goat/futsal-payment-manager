@@ -1,8 +1,8 @@
 import { getData } from '@/lib/storage';
 import { createPayment, deletePaymentAction } from '@/app/actions';
 import { BadgeDollarSign, History, Trash2 } from 'lucide-react';
-
 import { FlashMessage } from '@/components/FlashMessage';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +59,7 @@ export default async function PaymentsPage() {
                                 <input required name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="input" />
                             </div>
 
-                            <button type="submit" className="btn btn-primary w-full justify-center">Log Payment</button>
+                            <SubmitButton pendingText="Logging Payment..." className="btn btn-primary w-full justify-center">Log Payment</SubmitButton>
                         </form>
                     </div>
                 </div>

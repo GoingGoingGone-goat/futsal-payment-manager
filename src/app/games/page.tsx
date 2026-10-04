@@ -2,9 +2,9 @@ import { getData } from '@/lib/storage';
 import { createGame, deleteGameAction } from '@/app/actions';
 import { Calendar, PlusCircle, Trash2, User, Pencil } from 'lucide-react';
 import Link from 'next/link';
-
 import { FlashMessage } from '@/components/FlashMessage';
 import SquadSelector from '@/components/SquadSelector';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,7 +74,7 @@ export default async function GamesPage() {
 
                             <SquadSelector players={playersWithGamesPlayed} />
 
-                            <button type="submit" className="btn btn-primary w-full justify-center">Record Game</button>
+                            <SubmitButton pendingText="Recording Game..." className="btn btn-primary w-full justify-center">Record Game</SubmitButton>
                         </form>
                     </div>
                 </div>

@@ -3,6 +3,7 @@ import { getData } from '@/lib/storage';
 import { createFee, deleteFeeAction } from '@/app/actions';
 import { BadgeDollarSign, Trash2 } from 'lucide-react';
 import { FlashMessage } from '@/components/FlashMessage';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,7 +58,7 @@ export default async function FeesPage() {
                         </select>
                     </div>
 
-                    <button type="submit" className="btn btn-secondary">Add Fee</button>
+                    <SubmitButton pendingText="Adding Fee..." className="btn btn-secondary">Add Fee</SubmitButton>
                 </form>
             </div>
 

@@ -4,6 +4,7 @@ import { editGame } from '@/app/actions';
 import { ArrowLeft, Save, Trash2, Calendar, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,9 +104,9 @@ export default async function EditGamePage({ params }: { params: Promise<{ id: s
                         <Link href="/games" prefetch={true} className="btn bg-slate-700 hover:bg-slate-600 text-white">
                             Cancel
                         </Link>
-                        <button type="submit" className="btn btn-primary flex items-center gap-2">
+                        <SubmitButton pendingText="Saving Changes..." className="btn btn-primary flex items-center gap-2">
                             <Save size={18} /> Save Changes
-                        </button>
+                        </SubmitButton>
                     </div>
                 </form>
             </div>

@@ -199,57 +199,75 @@ export async function getData(bypassCache: boolean = false): Promise<Schema> {
 
 export async function addPlayer(name: string) {
     const id = randomUUID();
+    const newPlayer: Player = { id, name };
     if (USE_DB) {
         await sql`INSERT INTO players (id, name) VALUES (${id}, ${name})`;
-        return { id, name };
     } else {
         const data = await getLocalData();
-        const newPlayer = { id, name };
         data.players.push(newPlayer);
         await saveLocalData(data);
-        return newPlayer;
     }
+
+    if (cachedData) {
+        cachedData.players.push(newPlayer);
+        lastCacheTime = Date.now();
+    }
+
+    return newPlayer;
 }
 
 export async function addGame(game: Omit<Game, 'id'>) {
     const id = randomUUID();
+    const newGame: Game = {
+        ...game,
+        id,
+        season: game.season || 'Season 6'
+    };
+
     if (USE_DB) {
-        await sql`INSERT INTO games (id, date, opponent, score, cost_per_player, season) VALUES (${id}, ${game.date}, ${game.opponent}, ${game.score}, ${game.costPerPlayer}, ${game.season})`;
+        await sql`INSERT INTO games (id, date, opponent, score, cost_per_player, season) VALUES (${id}, ${newGame.date}, ${newGame.opponent}, ${newGame.score}, ${newGame.costPerPlayer}, ${newGame.season})`;
 
-        for (const p of game.players) {
-            await sql`INSERT INTO game_players (game_id, player_id, goals) VALUES (${id}, ${p.playerId}, ${p.goals})`;
+        if (newGame.players && newGame.players.length > 0) {
+            await Promise.all(
+                newGame.players.map(p => sql`INSERT INTO game_players (game_id, player_id, goals) VALUES (${id}, ${p.playerId}, ${p.goals})`)
+            );
         }
-
-        return { ...game, id };
     } else {
         const data = await getLocalData();
-        const newGame = {
-            ...game,
-            id,
-            season: game.season || 'Season 6'
-        };
         data.games.push(newGame);
         await saveLocalData(data);
-        return newGame;
     }
+
+    if (cachedData) {
+        cachedData.games.push(newGame);
+        lastCacheTime = Date.now();
+    }
+
+    return newGame;
 }
 
 export async function addPayment(payment: Omit<Payment, 'id'>) {
     const id = randomUUID();
+    const newPayment: Payment = {
+        ...payment,
+        id,
+        season: payment.season || 'Season 6'
+    };
+
     if (USE_DB) {
-        await sql`INSERT INTO payments (id, player_id, amount, date, season) VALUES (${id}, ${payment.playerId}, ${payment.amount}, ${payment.date}, ${payment.season})`;
-        return { ...payment, id };
+        await sql`INSERT INTO payments (id, player_id, amount, date, season) VALUES (${id}, ${newPayment.playerId}, ${newPayment.amount}, ${newPayment.date}, ${newPayment.season})`;
     } else {
         const data = await getLocalData();
-        const newPayment = {
-            ...payment,
-            id,
-            season: payment.season || 'Season 6'
-        };
         data.payments.push(newPayment);
         await saveLocalData(data);
-        return newPayment;
     }
+
+    if (cachedData) {
+        cachedData.payments.push(newPayment);
+        lastCacheTime = Date.now();
+    }
+
+    return newPayment;
 }
 
 export function calculatePlayerStats(data: Schema, playerId: string) {
@@ -324,16 +342,21 @@ export async function getPlayerStats(playerId: string) {
 
 export async function addFee(fee: Omit<Fee, 'id'>) {
     const id = randomUUID();
+    const newFee: Fee = { ...fee, id };
     if (USE_DB) {
         await sql`INSERT INTO fees (id, player_id, amount, description, date, season) VALUES (${id}, ${fee.playerId}, ${fee.amount}, ${fee.description}, ${fee.date}, ${fee.season})`;
-        return { ...fee, id };
     } else {
         const data = await getLocalData();
-        const newFee = { ...fee, id };
         data.fees.push(newFee);
         await saveLocalData(data);
-        return newFee;
     }
+
+    if (cachedData) {
+        cachedData.fees.push(newFee);
+        lastCacheTime = Date.now();
+    }
+
+    return newFee;
 }
 
 export async function deletePlayer(id: string) {
@@ -353,6 +376,16 @@ export async function deletePlayer(id: string) {
         });
         await saveLocalData(data);
     }
+
+    if (cachedData) {
+        cachedData.players = cachedData.players.filter(p => p.id !== id);
+        cachedData.payments = cachedData.payments.filter(p => p.playerId !== id);
+        cachedData.fees = cachedData.fees.filter(f => f.playerId !== id);
+        cachedData.games.forEach(g => {
+            g.players = g.players.filter(p => p.playerId !== id);
+        });
+        lastCacheTime = Date.now();
+    }
 }
 
 export async function deleteGame(id: string) {
@@ -364,6 +397,11 @@ export async function deleteGame(id: string) {
         data.games = data.games.filter(g => g.id !== id);
         await saveLocalData(data);
     }
+
+    if (cachedData) {
+        cachedData.games = cachedData.games.filter(g => g.id !== id);
+        lastCacheTime = Date.now();
+    }
 }
 
 export async function deletePayment(id: string) {
@@ -373,6 +411,11 @@ export async function deletePayment(id: string) {
         const data = await getLocalData();
         data.payments = data.payments.filter(p => p.id !== id);
         await saveLocalData(data);
+    }
+
+    if (cachedData) {
+        cachedData.payments = cachedData.payments.filter(p => p.id !== id);
+        lastCacheTime = Date.now();
     }
 }
 
@@ -384,6 +427,11 @@ export async function deleteFee(id: string) {
         data.fees = data.fees.filter(f => f.id !== id);
         await saveLocalData(data);
     }
+
+    if (cachedData) {
+        cachedData.fees = cachedData.fees.filter(f => f.id !== id);
+        lastCacheTime = Date.now();
+    }
 }
 
 // --- Update Functions ---
@@ -391,7 +439,6 @@ export async function deleteFee(id: string) {
 export async function updatePlayer(id: string, name: string) {
     if (USE_DB) {
         await sql`UPDATE players SET name = ${name} WHERE id = ${id}`;
-        return { id, name };
     } else {
         const data = await getLocalData();
         const player = data.players.find(p => p.id === id);
@@ -399,8 +446,17 @@ export async function updatePlayer(id: string, name: string) {
             player.name = name;
             await saveLocalData(data);
         }
-        return player;
     }
+
+    if (cachedData) {
+        const player = cachedData.players.find(p => p.id === id);
+        if (player) {
+            player.name = name;
+        }
+        lastCacheTime = Date.now();
+    }
+
+    return { id, name };
 }
 
 export async function updateGame(id: string, gameData: Partial<Game>) {
@@ -413,8 +469,6 @@ export async function updateGame(id: string, gameData: Partial<Game>) {
 
         // Note: Editing actual players/goals in a game is complex and skipped for now in this function
         // unless we want to do a full delete/re-insert of game_players which is safer but heavier.
-
-        return { id, ...gameData };
     } else {
         const data = await getLocalData();
         const game = data.games.find(g => g.id === id);
@@ -425,8 +479,20 @@ export async function updateGame(id: string, gameData: Partial<Game>) {
             if (gameData.season) game.season = gameData.season;
             await saveLocalData(data);
         }
-        return game;
     }
+
+    if (cachedData) {
+        const game = cachedData.games.find(g => g.id === id);
+        if (game) {
+            if (gameData.date) game.date = gameData.date;
+            if (gameData.opponent) game.opponent = gameData.opponent;
+            if (gameData.score) game.score = gameData.score;
+            if (gameData.season) game.season = gameData.season;
+        }
+        lastCacheTime = Date.now();
+    }
+
+    return { id, ...gameData };
 }
 
 // --- Advanced Analytics ---
