@@ -81,6 +81,34 @@ export function getDifficultyCategory(score: number): {
 }
 
 /**
+ * Returns styling for confidence levels:
+ * Excellent = greener (emerald)
+ * Very High = green
+ * High = amber/orange middle
+ * Medium = orange
+ * Low = redder (red)
+ */
+export function getConfidenceStyle(label: ConfidenceLevel): {
+    colorClass: string;
+    bgClass: string;
+    borderClass: string;
+} {
+    switch (label) {
+        case 'Excellent':
+            return { colorClass: 'text-emerald-400', bgClass: 'bg-emerald-500/10', borderClass: 'border-emerald-500/30' };
+        case 'Very High':
+            return { colorClass: 'text-green-400', bgClass: 'bg-green-500/10', borderClass: 'border-green-500/30' };
+        case 'High':
+            return { colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', borderClass: 'border-amber-500/30' };
+        case 'Medium':
+            return { colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/30' };
+        case 'Low':
+        default:
+            return { colorClass: 'text-red-400', bgClass: 'bg-red-500/10', borderClass: 'border-red-500/30' };
+    }
+}
+
+/**
  * Parses match score "Us - Them" (e.g. "5-3" or "5 : 3")
  */
 export function parseScore(score: string): { us: number; them: number; isValid: boolean } {

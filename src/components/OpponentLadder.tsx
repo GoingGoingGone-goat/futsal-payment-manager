@@ -16,6 +16,7 @@ import {
 import { 
     getOpponentLadder, 
     getDifficultyCategory,
+    getConfidenceStyle,
     type OpponentDifficultyStats 
 } from '@/lib/difficulty';
 import type { Game } from '@/lib/storage';
@@ -358,7 +359,6 @@ export default function OpponentLadder({
                                                 }`}>
                                                     {opp.gdPerGame > 0 ? `+${opp.gdPerGame.toFixed(2)}` : opp.gdPerGame.toFixed(2)}
                                                 </span>
-                                                <div className="text-[10px] text-muted uppercase">per game</div>
                                             </td>
 
                                             {/* Recent Form (up to 5, newest to oldest reading left to right) */}
@@ -388,19 +388,14 @@ export default function OpponentLadder({
 
                                             {/* Confidence */}
                                             <td className="py-4 px-4 text-center">
-                                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                                                    opp.confidenceLabel === 'Excellent'
-                                                        ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                                                        : opp.confidenceLabel === 'Very High'
-                                                            ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
-                                                            : opp.confidenceLabel === 'High'
-                                                                ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
-                                                                : opp.confidenceLabel === 'Medium'
-                                                                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
-                                                                    : 'bg-slate-800 text-slate-400 border-slate-700/50'
-                                                }`}>
-                                                    {opp.confidenceLabel}
-                                                </span>
+                                                {(() => {
+                                                    const confStyle = getConfidenceStyle(opp.confidenceLabel);
+                                                    return (
+                                                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${confStyle.bgClass} ${confStyle.colorClass} ${confStyle.borderClass}`}>
+                                                            {opp.confidenceLabel}
+                                                        </span>
+                                                    );
+                                                })()}
                                             </td>
 
                                             {/* Link Chevron */}
