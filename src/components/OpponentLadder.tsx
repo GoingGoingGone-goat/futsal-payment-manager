@@ -286,7 +286,7 @@ export default function OpponentLadder({
                                             <td className="py-4 px-4">
                                                 <Link 
                                                     href={`/teams/${encodeURIComponent(opp.name)}`}
-                                                    className="font-bold text-white group-hover:text-[hsl(var(--primary))] transition-colors block"
+                                                    className="text-base sm:text-lg font-bold text-white group-hover:text-[hsl(var(--primary))] transition-colors block"
                                                 >
                                                     {opp.name}
                                                 </Link>
@@ -324,7 +324,7 @@ export default function OpponentLadder({
                                                                         ? 'bg-gradient-to-r from-green-500 to-amber-500' 
                                                                         : 'bg-gradient-to-r from-emerald-500 to-green-500'
                                                             }`}
-                                                            style={{ width: `${scorePct}%` }}
+                                                             style={{ width: `${scorePct}%` }}
                                                         />
                                                     </div>
                                                 </div>
@@ -332,7 +332,7 @@ export default function OpponentLadder({
 
                                             {/* Head-to-Head Record */}
                                             <td className="py-4 px-4 text-center">
-                                                <div className="inline-flex items-center gap-1.5 font-bold text-xs bg-[hsl(var(--background)/0.6)] px-2.5 py-1 rounded-lg border border-[hsl(var(--border))]">
+                                                <div className="inline-flex items-center gap-2 font-bold text-sm sm:text-base bg-[hsl(var(--background)/0.6)] px-3 py-1.5 rounded-lg border border-[hsl(var(--border))]">
                                                     <span className="text-emerald-400" title="Wins">{opp.wins}W</span>
                                                     <span className="text-slate-400" title="Draws">{opp.draws}D</span>
                                                     <span className="text-rose-400" title="Losses">{opp.losses}L</span>
@@ -341,7 +341,7 @@ export default function OpponentLadder({
 
                                             {/* GD per Game */}
                                             <td className="py-4 px-4 text-center tabular-nums">
-                                                <span className={`font-bold text-sm ${
+                                                <span className={`font-bold text-base sm:text-lg ${
                                                     opp.gdPerGame > 0 
                                                         ? 'text-emerald-400' 
                                                         : opp.gdPerGame < 0 
@@ -357,11 +357,11 @@ export default function OpponentLadder({
                                                 {formBadges.length === 0 ? (
                                                     <span className="text-xs text-muted">—</span>
                                                 ) : (
-                                                    <div className="flex items-center gap-1">
+                                                    <div className="flex items-center gap-1.5">
                                                         {formBadges.map((res, i) => (
                                                             <span
                                                                 key={i}
-                                                                className={`w-6 h-6 flex items-center justify-center rounded text-[11px] font-black uppercase border shadow-sm ${
+                                                                className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md text-xs sm:text-sm font-black uppercase border shadow-sm ${
                                                                     res === 'W'
                                                                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                                                                         : res === 'L'
@@ -382,7 +382,7 @@ export default function OpponentLadder({
                                                 {(() => {
                                                     const confStyle = getConfidenceStyle(opp.confidenceLabel);
                                                     return (
-                                                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${confStyle.bgClass} ${confStyle.colorClass} ${confStyle.borderClass}`}>
+                                                        <span className={`inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-bold border ${confStyle.bgClass} ${confStyle.colorClass} ${confStyle.borderClass}`}>
                                                             {opp.confidenceLabel}
                                                         </span>
                                                     );

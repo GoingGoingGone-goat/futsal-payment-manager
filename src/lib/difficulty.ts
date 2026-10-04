@@ -99,9 +99,9 @@ export function getConfidenceStyle(label: ConfidenceLevel): {
         case 'Very High':
             return { colorClass: 'text-green-400', bgClass: 'bg-green-500/10', borderClass: 'border-green-500/30' };
         case 'High':
-            return { colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', borderClass: 'border-amber-500/30' };
+            return { colorClass: 'text-lime-400', bgClass: 'bg-lime-500/10', borderClass: 'border-lime-500/30' };
         case 'Medium':
-            return { colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/30' };
+            return { colorClass: 'text-amber-400', bgClass: 'bg-amber-500/10', borderClass: 'border-amber-500/30' };
         case 'Low':
         default:
             return { colorClass: 'text-red-400', bgClass: 'bg-red-500/10', borderClass: 'border-red-500/30' };

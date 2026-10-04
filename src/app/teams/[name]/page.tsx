@@ -3,6 +3,7 @@ import { getOpponentDetails, getDifficultyCategory, getOrdinal } from '@/lib/dif
 import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Minus, Trophy, Shield, Flame } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import OpponentNotes from '@/components/OpponentNotes';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +72,9 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
 
             {/* 7 Summary Metric Cards */}
             <div className="space-y-4">
+                {/* Opponent Notes */}
+                <OpponentNotes teamName={teamName} />
+
                 {/* Row 1: Traditional Record & Scoring (Wins, Draws, Losses, Agg. Score) */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="glass-card p-4 rounded-xl text-center border border-[hsl(var(--border))]">
@@ -180,14 +184,14 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
                             <div className="text-2xl font-black uppercase tracking-wide flex items-center gap-2">
                                 <span className={`${
                                     confidenceLabel === 'Excellent' 
-                                        ? 'text-cyan-400' 
+                                        ? 'text-emerald-400' 
                                         : confidenceLabel === 'Very High' 
-                                            ? 'text-indigo-400' 
+                                            ? 'text-green-400' 
                                             : confidenceLabel === 'High' 
-                                                ? 'text-purple-400' 
+                                                ? 'text-lime-400' 
                                                 : confidenceLabel === 'Medium' 
-                                                    ? 'text-blue-400' 
-                                                    : 'text-slate-400'
+                                                    ? 'text-amber-400' 
+                                                    : 'text-red-400'
                                 }`}>
                                     {confidenceLabel}
                                 </span>
