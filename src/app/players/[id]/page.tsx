@@ -1,5 +1,7 @@
 
-import { getData, getPlayerStats } from '@/lib/storage';
+export const dynamic = 'force-dynamic';
+
+import { getData, calculatePlayerStats } from '@/lib/storage';
 import { deletePlayerAction } from '@/app/actions';
 import { ArrowLeft, History, Trophy, Trash2, Wallet, BadgeDollarSign } from 'lucide-react';
 import Link from 'next/link';
@@ -16,7 +18,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         notFound();
     }
 
-    const stats = await getPlayerStats(playerId);
+    const stats = calculatePlayerStats(data, playerId);
 
     // Sort history by date desc
     const paymentHistory = [...stats.history.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -26,7 +28,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         <div className="space-y-8 animate-in fade-in duration-500">
             <header>
                 <div className="flex justify-between items-center mb-4">
-                    <Link href="/players" className="inline-flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--primary))] transition-colors">
+                    <Link href="/players" prefetch={true} className="inline-flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--primary))] transition-colors">
                         <ArrowLeft size={16} /> Back to Players
                     </Link>
                     <form action={deletePlayerAction.bind(null, playerId)}>

@@ -108,6 +108,7 @@ export default async function GamesPage() {
                                         <span className="text-muted-foreground">vs</span>
                                         <Link
                                             href={`/teams/${encodeURIComponent(game.opponent)}`}
+                                            prefetch={true}
                                             className="hover:text-[hsl(var(--primary))] hover:underline underline-offset-4 decoration-2 transition-all"
                                         >
                                             {game.opponent}
@@ -137,7 +138,7 @@ export default async function GamesPage() {
                                     )}
                                 </div>
 
-                                <Link href={`/games/${game.id}/edit`} className="p-2 text-muted-foreground hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.1)] rounded-full transition-colors" title="Edit Game">
+                                <Link href={`/games/${game.id}/edit`} prefetch={true} className="p-2 text-muted-foreground hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.1)] rounded-full transition-colors" title="Edit Game">
                                     <Pencil size={18} />
                                 </Link>
                                 <form action={deleteGameAction.bind(null, game.id)} className="ml-2 self-center">

@@ -21,7 +21,7 @@ export default async function EditGamePage({ params }: { params: Promise<{ id: s
     return (
         <div className="space-y-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
             <header className="flex items-center gap-4">
-                <Link href="/games" className="p-2 rounded-full hover:bg-[hsl(var(--accent))] transition-colors text-muted-foreground">
+                <Link href="/games" prefetch={true} className="p-2 rounded-full hover:bg-[hsl(var(--accent))] transition-colors text-muted-foreground">
                     <ArrowLeft size={24} />
                 </Link>
                 <div>
@@ -100,7 +100,7 @@ export default async function EditGamePage({ params }: { params: Promise<{ id: s
                     </div>
 
                     <div className="pt-6 border-t border-[hsl(var(--border))] flex justify-end gap-3">
-                        <Link href="/games" className="btn bg-slate-700 hover:bg-slate-600 text-white">
+                        <Link href="/games" prefetch={true} className="btn bg-slate-700 hover:bg-slate-600 text-white">
                             Cancel
                         </Link>
                         <button type="submit" className="btn btn-primary flex items-center gap-2">
