@@ -34,6 +34,7 @@ export function Nav() {
                             <Link
                                 key={href}
                                 href={href}
+                                prefetch={true}
                                 className={`flex flex-col md:flex-row items-center md:gap-4 p-4 md:px-6 md:py-4 rounded-xl transition-all ${isActive
                                     ? 'bg-[hsl(var(--primary)/0.15)] text-[hsl(var(--primary))] opacity-100'
                                     : 'text-[hsl(var(--primary))] opacity-70 hover:opacity-100 hover:bg-[hsl(var(--accent))]'

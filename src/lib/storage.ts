@@ -174,10 +174,27 @@ async function getDbData(): Promise<Schema> {
     }
 }
 
-// --- Public API ---
+// --- Public API & Data Caching ---
 
-export async function getData(): Promise<Schema> {
-    return USE_DB ? getDbData() : getLocalData();
+let cachedData: Schema | null = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+export function invalidateDataCache(): void {
+    cachedData = null;
+    lastCacheTime = 0;
+}
+
+export async function getData(bypassCache: boolean = false): Promise<Schema> {
+    const now = Date.now();
+    if (!bypassCache && cachedData && (now - lastCacheTime < CACHE_TTL_MS)) {
+        return cachedData;
+    }
+
+    const data = USE_DB ? await getDbData() : await getLocalData();
+    cachedData = data;
+    lastCacheTime = Date.now();
+    return data;
 }
 
 export async function addPlayer(name: string) {
@@ -704,3 +721,6 @@ export function getSynergyStats(data: Schema, seasonFilter?: string, minGames: n
 
     return { theCore, matchWinners, theWall };
 }
+
+export * from './analytics';
+export * from './difficulty';

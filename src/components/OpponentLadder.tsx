@@ -286,6 +286,7 @@ export default function OpponentLadder({
                                             <td className="py-4 px-4">
                                                 <Link 
                                                     href={`/teams/${encodeURIComponent(opp.name)}`}
+                                                    prefetch={true}
                                                     className="text-base sm:text-lg font-bold text-white group-hover:text-[hsl(var(--primary))] transition-colors block"
                                                 >
                                                     {opp.name}
@@ -393,6 +394,7 @@ export default function OpponentLadder({
                                             <td className="py-4 pr-4 pl-1 text-right">
                                                 <Link 
                                                     href={`/teams/${encodeURIComponent(opp.name)}`}
+                                                    prefetch={true}
                                                     className="p-1.5 rounded-lg text-muted group-hover:text-white group-hover:bg-[hsl(var(--accent))] transition-colors inline-block"
                                                     title={`View matches vs ${opp.name}`}
                                                 >

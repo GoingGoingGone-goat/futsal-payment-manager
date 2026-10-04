@@ -49,7 +49,7 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
             {/* Header */}
             <header>
                 <Link 
-                    href="/teams" 
+                    href="/teams" prefetch={true} 
                     className="inline-flex items-center gap-2 text-muted-foreground hover:text-[hsl(var(--primary))] mb-4 transition-colors text-sm font-medium"
                 >
                     <ArrowLeft size={16} /> Back to Opponents Ladder

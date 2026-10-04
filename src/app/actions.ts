@@ -1,6 +1,6 @@
 'use server';
 
-import { addGame, addPayment, addPlayer, addFee, getData, deletePlayer, deleteGame, deletePayment, deleteFee, updatePlayer, updateGame } from "@/lib/storage";
+import { addGame, addPayment, addPlayer, addFee, getData, deletePlayer, deleteGame, deletePayment, deleteFee, updatePlayer, updateGame, invalidateDataCache } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -34,6 +34,7 @@ export async function logout() {
 export async function createPlayer(formData: FormData) {
     const name = formData.get('name') as string;
     await addPlayer(name);
+    invalidateDataCache();
     revalidatePath('/');
     revalidatePath('/players');
     revalidatePath('/games');
@@ -47,6 +48,7 @@ export async function createPayment(formData: FormData) {
     const season = (formData.get('season') as string) || 'Season 6';
 
     await addPayment({ playerId, amount, date, season });
+    invalidateDataCache();
     revalidatePath('/');
     revalidatePath('/payments');
 }
@@ -88,6 +90,7 @@ export async function createGame(formData: FormData) {
         season
     });
 
+    invalidateDataCache();
     revalidatePath('/');
     revalidatePath('/games');
     revalidatePath(`/teams/${opponent}`); // Revalidate the opponent history page if it exists
@@ -95,6 +98,7 @@ export async function createGame(formData: FormData) {
 
 export async function deletePlayerAction(id: string) {
     await deletePlayer(id);
+    invalidateDataCache();
     revalidatePath('/');
     revalidatePath('/players');
     revalidatePath('/games');
@@ -103,6 +107,7 @@ export async function deletePlayerAction(id: string) {
 
 export async function deleteGameAction(id: string) {
     await deleteGame(id);
+    invalidateDataCache();
     revalidatePath('/');
     revalidatePath('/games');
     redirect('/games?msg=game_deleted');
@@ -110,6 +115,7 @@ export async function deleteGameAction(id: string) {
 
 export async function deletePaymentAction(id: string) {
     await deletePayment(id);
+    invalidateDataCache();
     revalidatePath('/');
     revalidatePath('/payments');
     revalidatePath('/players');
@@ -124,6 +130,7 @@ export async function createFee(formData: FormData) {
     const season = (formData.get('season') as string) || 'Season 6';
 
     await addFee({ playerId, amount, description, date, season });
+    invalidateDataCache();
     revalidatePath('/fees');
     revalidatePath('/players');
     revalidatePath(`/players/${playerId}`);
@@ -131,6 +138,7 @@ export async function createFee(formData: FormData) {
 
 export async function deleteFeeAction(id: string) {
     await deleteFee(id);
+    invalidateDataCache();
     revalidatePath('/fees');
     revalidatePath('/players');
     redirect('/fees?msg=fee_deleted');
@@ -145,6 +153,7 @@ export async function editPlayer(formData: FormData) {
     if (!id || !name) return;
 
     await updatePlayer(id, name);
+    invalidateDataCache();
     revalidatePath(`/players/${id}`);
     revalidatePath('/players');
 }
@@ -168,6 +177,7 @@ export async function editGame(formData: FormData) {
         season
     });
 
+    invalidateDataCache();
     revalidatePath('/games');
     revalidatePath(`/games/${id}`);
     redirect('/games?msg=updated');
