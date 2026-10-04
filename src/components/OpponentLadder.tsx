@@ -290,15 +290,6 @@ export default function OpponentLadder({
                                                 >
                                                     {opp.name}
                                                 </Link>
-                                                <div className="text-[11px] text-muted flex items-center gap-1.5 mt-0.5">
-                                                    <span>{opp.gamesPlayed} {opp.gamesPlayed === 1 ? 'game' : 'games'}</span>
-                                                    {opp.lastPlayed && (
-                                                        <>
-                                                            <span>•</span>
-                                                            <span>Last: {new Date(opp.lastPlayed).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</span>
-                                                        </>
-                                                    )}
-                                                </div>
                                             </td>
 
                                             {/* Difficulty Score + Indicator Bar */}
