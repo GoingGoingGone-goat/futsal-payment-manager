@@ -97,8 +97,18 @@ export function getPlayerProfileData(data: Schema, playerId: string): PlayerProf
     const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
     const owed = Math.max(0, totalCost - totalPaid);
 
-    // Average Money per Game = (Money Paid + Money Owed) / Games Played
-    const avgMoneyPerGame = gamesPlayed > 0 ? (totalPaid + owed) / gamesPlayed : 0;
+    // Average Money per Game is calculated only for games played after Season 2 (Season 3 onwards)
+    const postS2Games = playedGames.filter(g => g.season !== 'Season 1' && g.season !== 'Season 2');
+    const postS2GamesCount = postS2Games.length;
+    const postS2GameCost = postS2Games.reduce((sum, g) => sum + g.costPerPlayer, 0);
+    const postS2Fees = fees.filter(f => f.season !== 'Season 1' && f.season !== 'Season 2');
+    const postS2FeeCost = postS2Fees.reduce((sum, f) => sum + f.amount, 0);
+    const postS2Payments = payments.filter(p => p.season !== 'Season 1' && p.season !== 'Season 2');
+    const postS2Paid = postS2Payments.reduce((sum, p) => sum + p.amount, 0);
+    const postS2TotalCost = postS2GameCost + postS2FeeCost;
+    const postS2Owed = Math.max(0, postS2TotalCost - postS2Paid);
+
+    const avgMoneyPerGame = postS2GamesCount > 0 ? (postS2Paid + postS2Owed) / postS2GamesCount : 0;
 
     // Ratings: reusing exact formulas from Analytics / Power Rankings
     // Offensive Rating: Avg goals scored by team when player plays

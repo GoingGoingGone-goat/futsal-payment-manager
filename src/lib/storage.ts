@@ -507,6 +507,7 @@ export interface AdvancedStats {
     defensiveRating: { id: string; name: string; value: number }[];
     netRating: { id: string; name: string; value: number }[];
     offensiveRating: { id: string; name: string; value: number }[];
+    moneyPerGame: { id: string; name: string; value: number }[];
 }
 
 export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: number = 3): AdvancedStats {
@@ -616,6 +617,51 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: 
         .map(s => ({ ...s, value: (s.teamGoalsFor - s.teamGoalsAgainst) / s.totalGames }))
         .sort((a, b) => b.value - a.value);
 
+    // 10. Money / Game (calculated after Season 2, min games)
+    let relevantMoneyGames = data.games;
+    let relevantPayments = data.payments || [];
+    let relevantFees = data.fees || [];
+
+    if (!seasonFilter || seasonFilter === 'All') {
+        relevantMoneyGames = relevantMoneyGames.filter(g => g.season !== 'Season 1' && g.season !== 'Season 2');
+        relevantPayments = relevantPayments.filter(p => p.season !== 'Season 1' && p.season !== 'Season 2');
+        relevantFees = relevantFees.filter(f => f.season !== 'Season 1' && f.season !== 'Season 2');
+    } else if (seasonFilter === 'Season 1' || seasonFilter === 'Season 2') {
+        relevantMoneyGames = [];
+        relevantPayments = [];
+        relevantFees = [];
+    } else {
+        relevantMoneyGames = relevantMoneyGames.filter(g => g.season === seasonFilter);
+        relevantPayments = relevantPayments.filter(p => p.season === seasonFilter);
+        relevantFees = relevantFees.filter(f => f.season === seasonFilter);
+    }
+
+    const moneyPerGame = data.players
+        .map(player => {
+            const playerGames = relevantMoneyGames.filter(g => g.players.some(p => p.playerId === player.id));
+            const gamesCount = playerGames.length;
+            const playerPayments = relevantPayments.filter(p => p.playerId === player.id);
+            const playerFees = relevantFees.filter(f => f.playerId === player.id);
+
+            const gameCost = playerGames.reduce((sum, g) => sum + g.costPerPlayer, 0);
+            const feeCost = playerFees.reduce((sum, f) => sum + f.amount, 0);
+            const totalCost = gameCost + feeCost;
+            const totalPaid = playerPayments.reduce((sum, p) => sum + p.amount, 0);
+            const owed = Math.max(0, totalCost - totalPaid);
+
+            const value = gamesCount > 0 ? (totalPaid + owed) / gamesCount : 0;
+
+            return {
+                id: player.id,
+                name: player.name,
+                gamesCount,
+                value
+            };
+        })
+        .filter(s => s.gamesCount >= minGames)
+        .sort((a, b) => b.value - a.value)
+        .map(({ id, name, value }) => ({ id, name, value }));
+
     return {
         efficiency,
         totalGoals,
@@ -625,7 +671,8 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: 
         fightingSpirit,
         defensiveRating,
         offensiveRating,
-        netRating
+        netRating,
+        moneyPerGame
     };
 }
 

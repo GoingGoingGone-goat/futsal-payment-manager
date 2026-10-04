@@ -4,7 +4,6 @@ import { getData, getPlayerProfileData } from '@/lib/storage';
 import { deletePlayerAction } from '@/app/actions';
 import {
     ArrowLeft,
-    History,
     Trophy,
     Trash2,
     Wallet,
@@ -33,17 +32,10 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         notFound();
     }
 
-    // Sort history by date descending
+    // Sort payment history by date descending
     const paymentHistory = [...profile.history.payments].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
-    const gameHistory = [...profile.history.games].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    const winDiff = profile.winPctDiff;
-    const winDiffSign = winDiff > 0 ? '+' : '';
-    const winDiffFormatted = `${winDiffSign}${winDiff.toFixed(1)} percentage points`;
 
     return (
         <div className="space-y-10 animate-in fade-in duration-500">
@@ -100,7 +92,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                     <div className="glass-card p-5 rounded-2xl flex flex-col justify-between">
                         <span className="text-xs font-semibold uppercase tracking-wider text-muted">Games</span>
                         <div className="text-3xl sm:text-4xl font-black mt-2">{profile.gamesPlayed}</div>
-                        <span className="text-[11px] text-muted mt-1">Appearances</span>
                     </div>
 
                     <div className="glass-card p-5 rounded-2xl flex flex-col justify-between border-green-500/20">
@@ -157,21 +148,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                                 <span className="text-muted">Club Win % (All matches)</span>
                                 <span className="font-bold">{profile.clubWinPct.toFixed(1)}%</span>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted">Difference</span>
-                                <span className={`font-bold px-2 py-0.5 rounded-full text-xs ${
-                                    winDiff > 0
-                                        ? 'bg-green-500/20 text-green-400'
-                                        : winDiff < 0
-                                        ? 'bg-red-500/20 text-red-400'
-                                        : 'bg-slate-500/20 text-slate-300'
-                                }`}>
-                                    {winDiffFormatted}
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-muted mt-2">
-                                Descriptive comparison of club win rate in matches featuring {profile.name} versus overall history.
-                            </p>
                         </div>
                     </div>
 
@@ -206,9 +182,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                                     {profile.history.games.filter(g => (g.players.find(p => p.playerId === profile.id)?.goals || 0) > 0).length}
                                 </span>
                             </div>
-                            <p className="text-[11px] text-muted mt-2">
-                                Calculated directly from match scorecards and scorer records.
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -251,7 +224,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                             ${profile.avgMoneyPerGame.toFixed(2)}
                         </div>
                         <span className="text-[11px] text-muted">
-                            (Paid + Owed) / Games Played
+                            Average per game (Season 3+)
                         </span>
                     </div>
                 </div>
@@ -404,7 +377,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                 </div>
             </section>
 
-            {/* 6. HISTORY SECTION: Payments, Fees, Matches */}
+            {/* 6. HISTORY SECTION: Payments, Fees */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Payment History */}
                 <div className="space-y-4">
@@ -466,54 +439,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
-                    )}
-                </div>
-
-                {/* Match History */}
-                <div className="lg:col-span-2 space-y-4">
-                    <h2 className="text-lg font-semibold flex items-center gap-2">
-                        <History size={20} className="text-[hsl(var(--muted-foreground))]" /> Recent Matches
-                    </h2>
-                    {gameHistory.length === 0 ? (
-                        <div className="glass-card p-8 rounded-xl text-center text-muted text-sm">
-                            No games played.
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {gameHistory.map(game => {
-                                const performance = game.players.find(p => p.playerId === playerId);
-                                const goals = performance?.goals || 0;
-
-                                return (
-                                    <div key={game.id} className="glass-card p-4 rounded-xl flex items-center justify-between gap-4">
-                                        <div>
-                                            <div className="text-xs text-muted mb-1">{new Date(game.date).toLocaleDateString()}</div>
-                                            <div className="font-bold text-sm">
-                                                <Link
-                                                    href={`/teams/${encodeURIComponent(game.opponent)}`}
-                                                    prefetch={true}
-                                                    className="hover:text-[hsl(var(--primary))] hover:underline underline-offset-4 transition-all"
-                                                >
-                                                    vs {game.opponent}
-                                                </Link>
-                                            </div>
-                                            <div className="text-xs text-muted">Cost: ${game.costPerPlayer.toFixed(2)}</div>
-                                        </div>
-
-                                        <div className="flex items-center gap-3">
-                                            {goals > 0 && (
-                                                <div className="flex items-center gap-1 bg-[hsl(var(--secondary)/0.2)] text-[hsl(var(--secondary))] px-2.5 py-1 rounded-lg text-xs font-bold">
-                                                    <Trophy size={12} /> {goals} {goals === 1 ? 'Goal' : 'Goals'}
-                                                </div>
-                                            )}
-                                            <div className="font-bold bg-[hsl(var(--accent))] px-3 py-1 rounded-lg text-sm">
-                                                {game.score}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
                         </div>
                     )}
                 </div>

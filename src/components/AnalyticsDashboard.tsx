@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Target, Trophy, Shield, Crown, Zap, Flame, Users } from 'lucide-react';
+import { Target, Trophy, Shield, Crown, Zap, Flame, Users, DollarSign } from 'lucide-react';
 import { getAdvancedStats, getSynergyStats } from '@/lib/analytics';
 import type { Schema } from '@/lib/storage';
 
@@ -28,6 +28,7 @@ export default function AnalyticsDashboard({ initialData, availableSeasons }: An
         title, 
         icon: Icon, 
         data, 
+        prefix = '',
         suffix = '', 
         precision = 0, 
         description, 
@@ -36,6 +37,7 @@ export default function AnalyticsDashboard({ initialData, availableSeasons }: An
         title: string;
         icon: any;
         data: { id: string; name: string; value: number }[];
+        prefix?: string;
         suffix?: string;
         precision?: number;
         description: string;
@@ -68,7 +70,7 @@ export default function AnalyticsDashboard({ initialData, availableSeasons }: An
                             </span>
                         </div>
                         <span className={`font-bold tabular-nums shrink-0 ${showSign && player.value > 0 ? 'text-green-500' : showSign && player.value < 0 ? 'text-red-500' : ''}`}>
-                            {showSign && player.value > 0 ? '+' : ''}{player.value.toFixed(precision)}{suffix}
+                            {showSign && player.value > 0 ? '+' : ''}{prefix}{player.value.toFixed(precision)}{suffix}
                         </span>
                     </div>
                 ))}
@@ -336,6 +338,20 @@ export default function AnalyticsDashboard({ initialData, availableSeasons }: An
                             {synergy.theWall.length === 0 && <p className="text-muted text-sm">Not enough data.</p>}
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Financial Analytics Section */}
+            <div className="mt-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Leaderboard
+                        title="Money / Game"
+                        icon={DollarSign}
+                        data={stats.moneyPerGame}
+                        precision={2}
+                        prefix="$"
+                        description={`Average cost and contribution per match appearance (min ${currentMinGames} games, Season 3+).`}
+                    />
                 </div>
             </div>
         </div>
