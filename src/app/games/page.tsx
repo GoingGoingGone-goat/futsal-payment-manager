@@ -40,7 +40,7 @@ export default async function GamesPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium mb-1 text-muted">Season</label>
-                                    <select name="season" defaultValue="Season 5" className="input">
+                                    <select name="season" defaultValue="Season 6" className="input">
                                         <option value="Season 6">Season 6</option>
                                         <option value="Season 5">Season 5</option>
                                         <option value="Season 4">Season 4</option>
@@ -101,7 +101,7 @@ export default async function GamesPage() {
                                             ${game.costPerPlayer.toFixed(2)}/player
                                         </span>
                                         <span className="bg-[hsl(var(--secondary)/0.2)] text-[hsl(var(--secondary))] text-xs px-2 py-0.5 rounded font-medium">
-                                            {game.season || 'Season 5'}
+                                            {game.season || 'Season 6'}
                                         </span>
                                     </div>
                                     <h3 className="text-xl font-bold flex items-center gap-3">

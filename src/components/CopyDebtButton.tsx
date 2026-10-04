@@ -37,7 +37,7 @@ type CopyMode = 'simple' | 'summary' | 'detailed';
 export default function CopyDebtButton({ debtors }: { debtors: Debtor[] }) {
     const [copied, setCopied] = useState(false);
     const [mode, setMode] = useState<CopyMode>('simple');
-    const [selectedSeason, setSelectedSeason] = useState('Season 5');
+    const [selectedSeason, setSelectedSeason] = useState('Season 6');
 
     const handleCopy = async () => {
         if (!debtors || debtors.length === 0) return;
