@@ -186,8 +186,8 @@ export function calculateOpponentMetrics(
     const displayDifficulty = Math.round(difficultyScore * 10) / 10;
     const categoryInfo = getDifficultyCategory(displayDifficulty);
 
-    // Recent form: last 5 matches, oldest -> newest (so newest is on the right)
-    const recentForm = formList.slice(-5);
+    // Recent form: up to last 5 matches, newest -> oldest (reading left to right)
+    const recentForm = [...formList].reverse().slice(0, 5);
 
     return {
         name,

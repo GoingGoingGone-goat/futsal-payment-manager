@@ -237,7 +237,7 @@ export default function OpponentLadder({
                                 <tr className="bg-[hsl(var(--accent))] text-muted uppercase text-[11px] font-bold tracking-wider border-b border-[hsl(var(--border))]">
                                     <th className="py-3.5 px-4 text-center w-12">#</th>
                                     <th className="py-3.5 px-4 min-w-[180px]">Opponent</th>
-                                    <th className="py-3.5 px-4 min-w-[210px]">H2H Difficulty</th>
+                                    <th className="py-3.5 px-4 min-w-[210px]">Difficulty</th>
                                     <th className="py-3.5 px-4 text-center min-w-[110px]">Record</th>
                                     <th className="py-3.5 px-4 text-center min-w-[90px]">GD / G</th>
                                     <th className="py-3.5 px-4 min-w-[150px]">Recent Form</th>
@@ -335,12 +335,6 @@ export default function OpponentLadder({
                                                             style={{ width: `${scorePct}%` }}
                                                         />
                                                     </div>
-
-                                                    <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5 px-0.5">
-                                                        <span>0 (Easy)</span>
-                                                        <span className="text-slate-400 font-semibold">5 (Even)</span>
-                                                        <span>10 (Hard)</span>
-                                                    </div>
                                                 </div>
                                             </td>
 
@@ -350,9 +344,6 @@ export default function OpponentLadder({
                                                     <span className="text-emerald-400" title="Wins">{opp.wins}W</span>
                                                     <span className="text-slate-400" title="Draws">{opp.draws}D</span>
                                                     <span className="text-rose-400" title="Losses">{opp.losses}L</span>
-                                                </div>
-                                                <div className="text-[10px] text-muted mt-1 tabular-nums">
-                                                    {opp.goalsScored} - {opp.goalsConceded} ({opp.goalDifference > 0 ? `+${opp.goalDifference}` : opp.goalDifference} GD)
                                                 </div>
                                             </td>
 
@@ -370,7 +361,7 @@ export default function OpponentLadder({
                                                 <div className="text-[10px] text-muted uppercase">per game</div>
                                             </td>
 
-                                            {/* Recent Form (up to 5, oldest to newest, newest on right) */}
+                                            {/* Recent Form (up to 5, newest to oldest reading left to right) */}
                                             <td className="py-4 px-4">
                                                 {formBadges.length === 0 ? (
                                                     <span className="text-xs text-muted">—</span>
@@ -386,14 +377,11 @@ export default function OpponentLadder({
                                                                             ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
                                                                             : 'bg-slate-500/20 text-slate-300 border-slate-500/30'
                                                                 }`}
-                                                                title={`Match ${i + 1}: ${res === 'W' ? 'Win' : res === 'L' ? 'Loss' : 'Draw'}`}
+                                                                title={res === 'W' ? 'Win' : res === 'L' ? 'Loss' : 'Draw'}
                                                             >
                                                                 {res}
                                                             </span>
                                                         ))}
-                                                        <span className="text-[9px] text-muted uppercase font-bold ml-1">
-                                                            (Newest ➔)
-                                                        </span>
                                                     </div>
                                                 )}
                                             </td>
@@ -413,9 +401,6 @@ export default function OpponentLadder({
                                                 }`}>
                                                     {opp.confidenceLabel}
                                                 </span>
-                                                <div className="text-[10px] text-muted mt-0.5">
-                                                    weight: {Math.round(opp.confidenceWeight * 100)}%
-                                                </div>
                                             </td>
 
                                             {/* Link Chevron */}
