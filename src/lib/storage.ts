@@ -548,6 +548,8 @@ export function getAdvancedStats(data: Schema, seasonFilter?: string, minGames: 
 
 // --- Team Stats ---
 
+export * from './difficulty';
+
 export interface TeamStats {
     name: string;
     gamesPlayed: number;
