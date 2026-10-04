@@ -123,12 +123,18 @@ export default async function GamesPage() {
                                     {game.players.slice(0, 5).map(perf => {
                                         const p = data.players.find(pl => pl.id === perf.playerId);
                                         return p ? (
-                                            <div key={perf.playerId} title={`${p.name} (${perf.goals} goals)`} className="relative h-8 w-8 rounded-full ring-2 ring-[hsl(var(--card))] bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white group cursor-default">
+                                            <Link
+                                                key={perf.playerId}
+                                                href={`/players/${p.id}`}
+                                                prefetch={true}
+                                                title={`View ${p.name}'s profile (${perf.goals} ${perf.goals === 1 ? 'goal' : 'goals'})`}
+                                                className="relative h-8 w-8 rounded-full ring-2 ring-[hsl(var(--card))] bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white group hover:scale-110 hover:z-10 transition-transform cursor-pointer"
+                                            >
                                                 {p.name.charAt(0)}
                                                 {perf.goals > 0 && (
                                                     <span className="absolute -top-1 -right-1 h-3 w-3 bg-[hsl(var(--primary))] rounded-full border border-[hsl(var(--card))]"></span>
                                                 )}
-                                            </div>
+                                            </Link>
                                         ) : null;
                                     })}
                                     {game.players.length > 5 && (

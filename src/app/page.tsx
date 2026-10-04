@@ -1,6 +1,7 @@
 import { getData, calculatePlayerStats } from '@/lib/storage';
 import { DollarSign, Trophy, Users, TrendingUp } from 'lucide-react';
 import CopyDebtButton from '@/components/CopyDebtButton';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,7 +104,13 @@ export default async function Home() {
                         ) : (
                             debtors.map(player => (
                                 <div key={player.id} className="flex items-center justify-between p-3 rounded-xl bg-[hsl(var(--background)/0.5)] border border-[hsl(var(--border))]">
-                                    <span className="font-medium">{player.name}</span>
+                                    <Link
+                                        href={`/players/${player.id}`}
+                                        prefetch={true}
+                                        className="font-medium hover:text-[hsl(var(--primary))] transition-colors"
+                                    >
+                                        {player.name}
+                                    </Link>
                                     <span className="font-bold text-[hsl(var(--destructive))]">
                                         -${player.owed.toFixed(2)}
                                     </span>

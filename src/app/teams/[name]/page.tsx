@@ -246,17 +246,22 @@ export default async function TeamPage({ params }: { params: Promise<{ name: str
                                         const p = data.players.find(pl => pl.id === perf.playerId);
                                         if (!p) return null;
                                         return (
-                                            <div key={perf.playerId} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${perf.goals > 0
-                                                    ? 'bg-[hsl(var(--primary)/0.15)] border-[hsl(var(--primary)/0.3)] text-[hsl(var(--primary))]'
-                                                    : 'bg-[hsl(var(--background)/0.5)] border-[hsl(var(--border))] text-muted-foreground'
-                                                }`}>
+                                            <Link
+                                                key={perf.playerId}
+                                                href={`/players/${p.id}`}
+                                                prefetch={true}
+                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border hover:scale-105 transition-all cursor-pointer ${perf.goals > 0
+                                                    ? 'bg-[hsl(var(--primary)/0.15)] border-[hsl(var(--primary)/0.3)] text-[hsl(var(--primary))] hover:border-[hsl(var(--primary)/0.6)]'
+                                                    : 'bg-[hsl(var(--background)/0.5)] border-[hsl(var(--border))] text-muted-foreground hover:border-[hsl(var(--primary)/0.4)] hover:text-foreground'
+                                                }`}
+                                            >
                                                 <span className="text-sm font-medium">{p.name}</span>
                                                 {perf.goals > 0 && (
                                                     <span className="text-xs font-bold bg-[hsl(var(--primary))] text-white px-1.5 rounded-md">
                                                         {perf.goals}
                                                     </span>
                                                 )}
-                                            </div>
+                                            </Link>
                                         );
                                     })}
                                 </div>

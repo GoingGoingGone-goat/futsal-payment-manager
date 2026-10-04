@@ -790,3 +790,4 @@ export function getSynergyStats(data: Schema, seasonFilter?: string, minGames: n
 
 export * from './analytics';
 export * from './difficulty';
+export * from './playerProfile';
